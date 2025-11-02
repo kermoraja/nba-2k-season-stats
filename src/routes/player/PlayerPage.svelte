@@ -152,32 +152,39 @@
         </div>
 
         <h2 class="text-xl font-semibold mb-3 text-[#03a9f4]">📅 Mängud hooajal {selectedSeason}</h2>
-        <table class="w-full border-collapse text-sm text-center">
+        <table class="w-full text-sm rounded-xl overflow-hidden border border-[#02315e]">
             <thead class="bg-[#03538b]">
             <tr>
-                <th class="py-2">Kuupäev</th>
-                <th>Mäng</th>
-                <th>PTS</th>
-                <th>REB</th>
-                <th>AST</th>
-                <th>STL</th>
-                <th>BLK</th>
-                <th>TO</th>
-                <th>FLS</th>
+                <th class="py-2 px-3 text-left">Kuupäev</th>
+                <th class="py-2 px-3 text-left">Mäng</th>
+                <th class="py-2 px-3 text-center">PTS</th>
+                <th class="py-2 px-3 text-center">REB</th>
+                <th class="py-2 px-3 text-center">AST</th>
+                <th class="py-2 px-3 text-center">STL</th>
+                <th class="py-2 px-3 text-center">BLK</th>
+                <th class="py-2 px-3 text-center">TO</th>
+                <th class="py-2 px-3 text-center">FLS</th>
+                <th class="py-2 px-3 text-center">FG</th>
+                <th class="py-2 px-3 text-center">3PT</th>
+                <th class="py-2 px-3 text-center">FT</th>
             </tr>
             </thead>
+
             <tbody>
             {#each games as g}
-                <tr class="odd:bg-[#001048] even:bg-[#00093a] hover:bg-[#022c56]">
-                    <td class="py-2">{g.GAME_DATE}</td>
-                    <td>{g.VS_LABEL}</td> <!-- nt "vs JAZZ" või "@ HAWKS" -->
-                    <td>{g.PTS}</td>
-                    <td>{g.REB}</td>
-                    <td>{g.AST}</td>
-                    <td>{g.STL}</td>
-                    <td>{g.BLK}</td>
-                    <td>{g.TO}</td>
-                    <td>{g.FLS}</td>
+                <tr class="odd:bg-[#001048] even:bg-[#00093a] hover:bg-[#022c56] transition">
+                    <td class="py-2 px-3">{g.GAME_DATE}</td>
+                    <td class="px-3">{g.VS_LABEL}</td>
+                    <td class="text-center">{g.PTS}</td>
+                    <td class="text-center">{g.REB}</td>
+                    <td class="text-center">{g.AST}</td>
+                    <td class="text-center">{g.STL}</td>
+                    <td class="text-center">{g.BLK}</td>
+                    <td class="text-center">{g.TO}</td>
+                    <td class="text-center">{g.FLS}</td>
+                    <td class="text-center">{g.FG || "-"}</td>
+                    <td class="text-center">{g["3PT"] || "-"}</td>
+                    <td class="text-center">{g.FT || "-"}</td>
                 </tr>
             {/each}
             </tbody>
