@@ -1,10 +1,9 @@
 <script>
     import PlayerCard from "./PlayerCard.svelte";
+
     export let teamName;
     export let players = [];
     export let selectedStat = "PTS";
-
-    $: console.log("🧩", teamName, players);
 
     $: cleanPlayers = (players || []).filter(p => p && typeof p === 'object' && p.NAME);
     $: sorted = [...cleanPlayers].sort((a, b) => (b[selectedStat] ?? 0) - (a[selectedStat] ?? 0));
@@ -14,21 +13,25 @@
 
 <h2 class="section-title">🏀 {teamName}</h2>
 
-<!-- Tiimi TOP 3 -->
 <div class="grid top3">
     {#each top3 as p}
-        <PlayerCard player={p} selectedStat={selectedStat}/>
+        <a href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}>
+            <PlayerCard player={p} selectedStat={selectedStat}/>
+        </a>
     {/each}
 </div>
 
-<!-- Ülejäänud -->
-{#if others.length > 0}
-    <div class="grid others mt-4">
-        {#each others as p}
-            <PlayerCard player={p} selectedStat={selectedStat}/>
-        {/each}
-    </div>
-{/if}
+<div class="grid">
+    {#if others.length > 0}
+        <div class="grid others mt-4">
+            {#each others as p}
+                <a href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}>
+                    <PlayerCard player={p} selectedStat={selectedStat}/>
+                </a>
+            {/each}
+        </div>
+    {/if}
+</div>
 
 <style>
     .section-title {

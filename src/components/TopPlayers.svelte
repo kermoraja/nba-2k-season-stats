@@ -11,7 +11,9 @@
 
     <div class="grid">
         {#each players as p}
-            <PlayerCard player={p} selectedStat={selectedStat}/>
+            <a href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}>
+                <PlayerCard player={p} {selectedStat} />
+            </a>
         {/each}
     </div>
 </section>
