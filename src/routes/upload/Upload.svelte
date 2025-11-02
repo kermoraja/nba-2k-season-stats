@@ -6,12 +6,12 @@
 
     let team1File: File | null = null;
     let team2File: File | null = null;
-    let season = "2024-25";
+    let season = "Hawk-Jazz-1";
     let status = "";
 
     async function handleUpload() {
         if (!team1File || !team2File) {
-            status = "❌ Palun vali mõlemad JSON-failid!";
+            status = "Palun vali mõlemad JSON-failid!";
             return;
         }
 
@@ -24,13 +24,30 @@
             const team1 = JSON.parse(team1Text);
             const team2 = JSON.parse(team2Text);
 
+            const statKeys = [
+                "MIN", "PTS", "REB", "AST", "STL", "BLK", "TOV",
+                "FGM", "FGA", "FG%", "3PM", "3PA", "3P%", "FTM", "FTA", "FT%"
+            ];
+
+            function fillMissingStats(players) {
+                return (players || []).map(p => {
+                    const filled = { ...p };
+                    for (const key of statKeys) {
+                        if (filled[key] === undefined || filled[key] === "") {
+                            filled[key] = 0;
+                        }
+                    }
+                    return filled;
+                });
+            }
+
             const gameData = {
                 SEASON: season,
                 GAME_DATE: new Date().toISOString().split("T")[0],
                 AWAY_TEAM: team1.TEAM_STATS?.TEAM_NAME || "AWAY",
                 HOME_TEAM: team2.TEAM_STATS?.TEAM_NAME || "HOME",
-                AWAY_TEAM_PLAYER_STATS: team1.PLAYER_STATS || [],
-                HOME_TEAM_PLAYER_STATS: team2.PLAYER_STATS || [],
+                AWAY_TEAM_PLAYER_STATS: fillMissingStats(team1.PLAYER_STATS),
+                HOME_TEAM_PLAYER_STATS: fillMissingStats(team2.PLAYER_STATS),
                 GAME_SUMMARY: {
                     AWAY_TEAM_TOTAL: team1.GAME_SUMMARY?.AWAY_TEAM_SCORE?.TOTAL || null,
                     HOME_TEAM_TOTAL: team2.GAME_SUMMARY?.HOME_TEAM_SCORE?.TOTAL || null,
@@ -40,10 +57,10 @@
             const gameId = `${gameData.AWAY_TEAM}-vs-${gameData.HOME_TEAM}-${gameData.GAME_DATE}`;
             await setDoc(doc(db, "games", gameId), gameData);
 
-            status = `✅ Mäng salvestatud: ${gameData.AWAY_TEAM} vs ${gameData.HOME_TEAM}`;
+            status = `Mäng salvestatud: ${gameData.AWAY_TEAM} vs ${gameData.HOME_TEAM}`;
         } catch (err) {
             console.error(err);
-            status = "❌ Tekkis viga üleslaadimisel!";
+            status = "Tekkis viga üleslaadimisel!";
         }
     }
 
@@ -63,8 +80,6 @@
 {:else if !$user}
     <LoginForm />
 {:else}
-    <!-- Upload lehe sisu -->
-
     <main class="min-h-screen flex items-center justify-center bg-[#f4f6fa] p-4">
         <div class="bg-white w-full max-w-lg rounded-2xl shadow-lg p-8 border border-gray-100">
             <h1 class="text-2xl font-semibold text-[#03538b] text-center mb-6">
