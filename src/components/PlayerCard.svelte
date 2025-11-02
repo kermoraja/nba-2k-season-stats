@@ -1,119 +1,60 @@
 <script lang="ts">
-    import type { PlayerStats } from "../lib/services/statsService";
-    import { formatPlayerImageName } from "../lib/helpers/formatPlayerImageName";
-    import { getImageUrl } from "../lib/utils/images";
+    import type { PlayerStats } from "../lib/services/statsService"
+    import { getImageUrl } from "../lib/utils/images"
 
-    export let player: PlayerStats;
-    export let selectedStat = "PTS";
+    export let player: PlayerStats
+    export let selectedStat = "PTS"
 
-    const formattedName = formatPlayerImageName(player.NAME);
-    const imagePath = getImageUrl(player.NAME);
-    const defaultImage = getImageUrl('default_player');
+    const imagePath = getImageUrl(player.NAME)
+    const defaultImage = getImageUrl("default_player")
 
-    const getValue = (v: any) => (v !== undefined && v !== null ? v : "-");
+    const teamColors: Record<string, string> = {
+        HAWKS: "linear-gradient(180deg, rgba(139,30,63,0.9) 0%, rgba(58,14,30,0.95) 100%)",
+        JAZZ: "linear-gradient(180deg, rgba(12,35,64,0.9) 0%, rgba(29,41,81,0.95) 100%)",
+        LAKERS: "linear-gradient(180deg, rgba(85,37,131,0.9) 0%, rgba(253,185,39,0.95) 100%)",
+        CELTICS: "linear-gradient(180deg, rgba(0,122,51,0.9) 0%, rgba(0,71,27,0.95) 100%)",
+        HEAT: "linear-gradient(180deg, rgba(152,0,46,0.9) 0%, rgba(0,0,0,0.95) 100%)",
+        DEFAULT: "linear-gradient(180deg, rgba(0,16,69,0.9) 0%, rgba(0,5,54,0.95) 100%)"
+    }
 
-    const formatFG = () =>
-        player.FG_ATT > 0 ? `${player.FG_MADE}-${player.FG_ATT} (${player.FG_PCT}%)` : "-";
-
-    const formatFT = () =>
-        player.FT_ATT > 0 ? `${player.FT_MADE}-${player.FT_ATT} (${player.FT_PCT}%)` : "-";
-
-    const format3PT = () =>
-        player.TP_ATT > 0 ? `${player.TP_MADE}-${player.TP_ATT} (${player.TP_PCT}%)` : "-";
+    const bgStyle = teamColors[player.TEAM] || teamColors.DEFAULT
 
     const onImgError = (e: Event) => {
-        const img = e.currentTarget as HTMLImageElement;
+        const img = e.currentTarget as HTMLImageElement
         if (img.dataset.fallback !== "1") {
-            img.dataset.fallback = "1";
-            img.src = defaultImage;
+            img.dataset.fallback = "1"
+            img.src = defaultImage
         }
-    };
+    }
 </script>
 
-<div class="player-card">
+<div
+        class="relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1"
+        style="background: {bgStyle};"
+>
     <img
-            class="player-img"
             src={imagePath}
             alt={player.NAME}
+            class="absolute top-3 right-3 w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover opacity-90 pointer-events-none"
             on:error={onImgError}
     />
 
-    <div class="header">
-        <h3>{player.NAME}</h3>
-        <p class="highlight">{selectedStat}: {getValue(player[selectedStat])}</p>
+    <div class="z-10">
+        <h3 class="text-lg sm:text-xl font-semibold mb-1">{player.NAME}</h3>
+        <p class="text-yellow-400 text-base sm:text-lg font-bold mb-3">
+            {selectedStat}: {player[selectedStat] ?? "-"}
+        </p>
     </div>
 
-    <div class="stats">
-        <div><strong>FG:</strong> {formatFG()}</div>
-        <div><strong>FT:</strong> {formatFT()}</div>
-        <div><strong>3PT:</strong> {format3PT()}</div>
+    <div class="text-sm text-gray-200 flex flex-col gap-1">
+        <div><span class="text-gray-300 font-medium">FG:</span> {player.FG_MADE}-{player.FG_ATT} ({player.FG_PCT}%)</div>
+        <div><span class="text-gray-300 font-medium">FT:</span> {player.FT_MADE}-{player.FT_ATT} ({player.FT_PCT}%)</div>
+        <div><span class="text-gray-300 font-medium">3PT:</span> {player.TP_MADE}-{player.TP_ATT} ({player.TP_PCT}%)</div>
     </div>
 
-    <div class="extras">
+    <div class="flex justify-between text-xs sm:text-sm text-gray-300 mt-3">
         <span>REB: {player.REB}</span>
         <span>AST: {player.AST}</span>
         <span>STL: {player.STL}</span>
     </div>
 </div>
-
-<style>
-    .player-card {
-        position: relative;
-        background: linear-gradient(180deg, #001045 0%, #000536 100%);
-        border-radius: 1rem;
-        padding: 1rem;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        overflow: hidden;
-        transition: transform 0.2s ease;
-    }
-    .player-card:hover {
-        transform: translateY(-4px);
-    }
-
-    /* Pilt väikese overlay-na paremas ülanurgas */
-    .player-img {
-        position: absolute;
-        top: 0.4rem;
-        right: 0.4rem;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        object-fit: cover;
-        opacity: 0.4;
-        pointer-events: none;
-    }
-
-    .header {
-        margin-bottom: 0.4rem;
-        z-index: 1;
-    }
-    .header h3 {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 600;
-    }
-    .highlight {
-        color: #ffd700;
-        font-weight: bold;
-        font-size: 1.1rem;
-    }
-    .stats {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-        font-size: 0.85rem;
-        color: #c0d8ff;
-        z-index: 1;
-    }
-    .extras {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.8rem;
-        margin-top: 0.4rem;
-        opacity: 0.9;
-        z-index: 1;
-    }
-</style>

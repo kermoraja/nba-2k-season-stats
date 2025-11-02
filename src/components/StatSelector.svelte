@@ -1,28 +1,26 @@
 <script lang="ts">
+    export let statOptions = ["PTS", "REB", "AST", "STL", "BLK", "TO", "MIN"];
     export let selectedStat = "PTS";
-    export let statOptions: string[] = ["PTS", "REB", "AST", "STL", "BLK", "TO", "MIN"];
-    export let onChange: (stat: string) => void = () => {};
+    export let onChange = (stat: string) => {};
+
+    function handleSelect(stat: string) {
+        selectedStat = stat;
+        onChange(stat);
+    }
 </script>
 
-<label class="text-sm opacity-80 mr-2">Statistika:</label>
-{#each statOptions as stat}
-    <button
-            class="stat-btn {stat === selectedStat ? 'active' : ''}"
-            on:click={() => onChange?.(stat)}
-    >
-        {stat}
-    </button>
-{/each}
+<div class="flex flex-col items-center mt-6">
+    <h3 class="text-white text-lg font-medium mb-3">Vali statistika:</h3>
 
-<style>
-    button.stat-btn {
-        padding: 0.3rem 0.8rem;
-        border: 1px solid #03538b;
-        border-radius: 8px;
-        margin-right: 0.4rem;
-        cursor: pointer;
-    }
-    button.stat-btn.active {
-        background-color: #03538b;
-    }
-</style>
+    <div class="flex flex-wrap justify-center gap-2">
+        {#each statOptions as stat}
+            <button
+                    class="px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 border-2 border-[#03538b] text-white
+					hover:bg-[#03538b] hover:scale-105
+					{selectedStat === stat ? 'bg-gradient-to-br from-[#03538b] to-[#0478c0] shadow-[0_0_12px_rgba(3,83,139,0.6)] scale-110' : 'bg-[#001a4d]'}"
+                    on:click={() => handleSelect(stat)}>
+                {stat}
+            </button>
+        {/each}
+    </div>
+</div>

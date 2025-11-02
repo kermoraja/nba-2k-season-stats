@@ -126,7 +126,8 @@
         <p>⏳ Laen mängija andmeid...</p>
     {:else}
         <div class="flex items-center gap-6 mb-8">
-            <img src={playerImageUrl} alt={playerName} class="w-28 h-28 rounded-xl object-cover border-2 border-[#03538b]" />
+            <img src={playerImageUrl} alt={playerName}
+                 class="w-28 h-28 rounded-xl object-cover border-2 border-[#03538b]"/>
             <div>
                 <h1 class="text-4xl font-bold text-[#03a9f4] mb-1">{playerName}</h1>
                 <label class="text-sm opacity-80">Hooaeg:</label>
@@ -152,7 +153,7 @@
         </div>
 
         <h2 class="text-xl font-semibold mb-3 text-[#03a9f4]">📅 Mängud hooajal {selectedSeason}</h2>
-        <table class="w-full text-sm rounded-xl overflow-hidden border border-[#02315e]">
+        <table class="hidden sm:table w-full text-sm rounded-xl overflow-hidden border border-[#02315e]">
             <thead class="bg-[#03538b]">
             <tr>
                 <th class="py-2 px-3 text-left">Kuupäev</th>
@@ -189,6 +190,60 @@
             {/each}
             </tbody>
         </table>
+
+        <div class="sm:hidden space-y-4">
+            {#each games as g}
+                <div class="bg-[#00093a]/60 backdrop-blur-md border border-[#03538b]/50 rounded-2xl p-4 shadow-lg hover:shadow-[#03538b]/30 transition-all">
+                    <div class="flex justify-between items-center text-sm text-[#8fbce6] mb-3">
+                        <span class="font-medium">{g.GAME_DATE}</span>
+                        <span class="uppercase text-xs bg-[#03538b]/20 px-2 py-0.5 rounded-md">
+                        {g.VS_LABEL}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-y-3 text-center text-white text-sm">
+                        <div>
+                            <div class="text-[#8fbce6] text-xs font-semibold">PTS</div>
+                            <div class="text-lg font-bold">{g.PTS}</div>
+                        </div>
+                        <div>
+                            <div class="text-[#8fbce6] text-xs font-semibold">REB</div>
+                            <div class="text-lg font-bold">{g.REB}</div>
+                        </div>
+                        <div>
+                            <div class="text-[#8fbce6] text-xs font-semibold">AST</div>
+                            <div class="text-lg font-bold">{g.AST}</div>
+                        </div>
+
+                        <div>
+                            <div class="text-[#8fbce6] text-xs font-semibold">STL</div>
+                            <div class="text-lg font-bold">{g.STL}</div>
+                        </div>
+                        <div>
+                            <div class="text-[#8fbce6] text-xs font-semibold">BLK</div>
+                            <div class="text-lg font-bold">{g.BLK}</div>
+                        </div>
+                        <div>
+                            <div class="text-[#8fbce6] text-xs font-semibold">TO</div>
+                            <div class="text-lg font-bold">{g.TO}</div>
+                        </div>
+                        <div>
+                            <div class="text-[#8fbce6] text-xs font-semibold">FG%</div>
+                            <div class="text-lg font-bold">{g.FG}</div>
+                        </div>
+                        <div>
+                            <div class="text-[#8fbce6] text-xs font-semibold">3PT%</div>
+                            <div class="text-lg font-bold">{g["3PT"]}</div>
+                        </div>
+                        <div>
+                            <div class="text-[#8fbce6] text-xs font-semibold">FT%</div>
+                            <div class="text-lg font-bold">{g.FT}</div>
+                        </div>
+
+                    </div>
+                </div>
+            {/each}
+        </div>
     {/if}
 </main>
 

@@ -7,8 +7,7 @@ function handleChange(e) {
     onChange?.(e.target.value);
 }
 </script>
-
-<label class="text-sm opacity-80 mr-2">Vali hooaeg:</label>
+<h3 class="text-white text-lg font-medium mb-3">Vali hooaeg:</h3>
 <select bind:value={selectedSeason} on:change={handleChange}>
     {#each seasons as s}
     <option value={s}>{s}</option>

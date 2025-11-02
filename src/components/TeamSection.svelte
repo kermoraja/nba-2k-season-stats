@@ -11,47 +11,30 @@
     $: others = sorted.slice(3);
 </script>
 
-<h2 class="section-title">🏀 {teamName}</h2>
+<section class="w-full max-w-7xl mx-auto px-4 mt-8">
+    <h3 class="text-2xl font-bold text-[#03A9F4] mb-4 uppercase">{teamName}</h3>
 
-<div class="grid top3">
-    {#each top3 as p}
-        <a href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}>
-            <PlayerCard player={p} selectedStat={selectedStat}/>
-        </a>
-    {/each}
-</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
+        {#each top3 as p}
+            <a
+                    href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}
+                    class="w-full max-w-sm transition-transform hover:scale-[1.02]"
+            >
+                <PlayerCard player={p} {selectedStat} />
+            </a>
+        {/each}
+    </div>
 
-<div class="grid">
     {#if others.length > 0}
-        <div class="grid others mt-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6 justify-items-center">
             {#each others as p}
-                <a href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}>
-                    <PlayerCard player={p} selectedStat={selectedStat}/>
+                <a
+                        href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}
+                        class="w-full max-w-sm transition-transform hover:scale-[1.02]"
+                >
+                    <PlayerCard player={p} {selectedStat} />
                 </a>
             {/each}
         </div>
     {/if}
-</div>
-
-<style>
-    .section-title {
-        font-size: 1.4rem;
-        font-weight: bold;
-        color: #03538b;
-        margin: 1.5rem 0 1rem;
-    }
-
-    .grid {
-        display: grid;
-        gap: 1rem;
-    }
-
-    .grid.top3 {
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    }
-
-    .grid.others {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        opacity: 0.9;
-    }
-</style>
+</section>
