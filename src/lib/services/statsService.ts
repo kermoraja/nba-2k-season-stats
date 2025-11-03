@@ -22,6 +22,7 @@ export type PlayerStats = {
     FG_PCT?: number | string
     FT_PCT?: number | string
     TP_PCT?: number | string
+    mvpIndex: number
 }
 
 
@@ -80,7 +81,8 @@ export async function getSeasonStats(
                     FT_MADE: 0,
                     FT_ATT: 0,
                     TP_MADE: 0,
-                    TP_ATT: 0
+                    TP_ATT: 0,
+                    mvpIndex: 0
                 }
             }
 
