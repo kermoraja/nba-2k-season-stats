@@ -54,7 +54,9 @@
                 },
             };
 
-            const gameId = `${gameData.AWAY_TEAM}-vs-${gameData.HOME_TEAM}-${gameData.GAME_DATE}`;
+            const randomIndicator = Math.floor(1000 + Math.random() * 9000);
+            const gameId = `${gameData.AWAY_TEAM}-vs-${gameData.HOME_TEAM}-${gameData.GAME_DATE}-${randomIndicator}`;
+
             await setDoc(doc(db, "games", gameId), gameData);
 
             status = `Mäng salvestatud: ${gameData.AWAY_TEAM} vs ${gameData.HOME_TEAM}`;
@@ -89,7 +91,7 @@
             <div class="flex flex-col gap-5">
                 <div>
                     <label for="team1" class="block text-sm font-medium text-gray-700 mb-1">
-                        Tiim 1 JSON:
+                        AWAY TEAM JSON:
                     </label>
                     <input
                             id="team1"
@@ -104,7 +106,7 @@
 
                 <div>
                     <label for="team2" class="block text-sm font-medium text-gray-700 mb-1">
-                        Tiim 2 JSON:
+                        HOME TEAM JSON:
                     </label>
                     <input
                             id="team2"
