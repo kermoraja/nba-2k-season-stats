@@ -42,6 +42,9 @@
             const opponent = isHome ? data.AWAY_TEAM : data.HOME_TEAM;
             const locMarker = isHome ? "vs" : "@"; // ilus märgistus
 
+            const awayScore = data.GAME_SUMMARY?.AWAY_TEAM_TOTAL || 0;
+            const homeScore = data.GAME_SUMMARY?.HOME_TEAM_TOTAL || 0;
+
             playerGames.push({
                 SEASON: data.SEASON,
                 GAME_DATE: data.GAME_DATE,
@@ -49,6 +52,13 @@
                 OPPONENT: opponent,
                 IS_HOME: isHome,
                 VS_LABEL: `${locMarker} ${opponent}`,
+                SCORE: `${homeScore} - ${awayScore}`,
+                SCORE_DETAIL: isHome
+                    ? `${team} ${homeScore} - ${awayScore} ${opponent}`
+                    : `${team} ${awayScore} - ${homeScore} ${opponent}`,
+                RESULT: isHome
+                    ? homeScore > awayScore ? "W" : "L"
+                    : awayScore > homeScore ? "W" : "L",
                 ...stat,
             });
         });
@@ -158,6 +168,7 @@
             <tr>
                 <th class="py-2 px-3 text-left">Kuupäev</th>
                 <th class="py-2 px-3 text-left">Mäng</th>
+                <th class="py-2 px-3 text-left">Skoor</th>
                 <th class="py-2 px-3 text-center">PTS</th>
                 <th class="py-2 px-3 text-center">REB</th>
                 <th class="py-2 px-3 text-center">AST</th>
@@ -176,6 +187,7 @@
                 <tr class="odd:bg-[#001048] even:bg-[#00093a] hover:bg-[#022c56] transition">
                     <td class="py-2 px-3">{g.GAME_DATE}</td>
                     <td class="px-3">{g.VS_LABEL}</td>
+                    <td class="text-left">{g.SCORE_DETAIL} <span class="ml-1 font-bold text-[#03a9f4]">{g.RESULT}</span></td>
                     <td class="text-center">{g.PTS}</td>
                     <td class="text-center">{g.REB}</td>
                     <td class="text-center">{g.AST}</td>
