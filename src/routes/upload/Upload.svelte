@@ -44,8 +44,8 @@
             const gameData = {
                 SEASON: season,
                 GAME_DATE: new Date().toISOString().split("T")[0],
-                AWAY_TEAM: team1.TEAM_STATS?.TEAM_NAME || "AWAY",
-                HOME_TEAM: team2.TEAM_STATS?.TEAM_NAME || "HOME",
+                AWAY_TEAM: team1.TEAM_STATS || "AWAY",
+                HOME_TEAM: team2.TEAM_STATS || "HOME",
                 AWAY_TEAM_PLAYER_STATS: fillMissingStats(team1.PLAYER_STATS),
                 HOME_TEAM_PLAYER_STATS: fillMissingStats(team2.PLAYER_STATS),
                 GAME_SUMMARY: {
