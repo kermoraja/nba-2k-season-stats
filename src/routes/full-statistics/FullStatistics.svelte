@@ -8,6 +8,7 @@
     let teams: string[] = []
     let players: PlayerStats[] = []
     let isLoading = false
+    let showBothTeams = false
 
     const columns: { key: keyof PlayerStats; label: string }[] = [
         { key: 'NAME', label: 'NAME' },
@@ -42,7 +43,15 @@
         const { teams: teamStats } = await getSeasonStats(selectedSeason)
         teams = Object.keys(teamStats)
         if (!selectedTeam && teams.length > 0) selectedTeam = teams[0]
-        players = selectedTeam ? teamStats[selectedTeam] : []
+
+        if (showBothTeams) {
+            players = teams.flatMap(team =>
+                teamStats[team].map(p => ({ ...p, TEAM: team }))
+            )
+        } else {
+            players = selectedTeam ? teamStats[selectedTeam].map(p => ({ ...p, TEAM: selectedTeam })) : []
+        }
+
         applySort()
         isLoading = false
     }
@@ -54,6 +63,11 @@
 
     function handleTeamChange(e: Event) {
         selectedTeam = (e.target as HTMLSelectElement).value
+        loadSeasonStats()
+    }
+
+    function handleBothTeamsToggle(e: Event) {
+        showBothTeams = (e.target as HTMLInputElement).checked
         loadSeasonStats()
     }
 
@@ -94,29 +108,35 @@
 </script>
 
 <div class="p-6 space-y-4 text-white">
-    <h1 class="text-3xl font-bold">Full Statistics</h1>
+    <h1 class="text-3xl font-bold">Kogu statistika</h1>
 
-    <div class="flex flex-wrap gap-4">
+    <div class="flex flex-wrap gap-4 items-center">
         <select class="bg-[#03538b] px-3 py-2 rounded-lg" bind:value={selectedSeason} on:change={handleSeasonChange}>
             {#each seasons as season}
                 <option value={season}>{season}</option>
             {/each}
         </select>
 
-        <select class="bg-[#03538b] px-3 py-2 rounded-lg" bind:value={selectedTeam} on:change={handleTeamChange}>
+        <select class="bg-[#03538b] px-3 py-2 rounded-lg" bind:value={selectedTeam} on:change={handleTeamChange} disabled={showBothTeams}>
             {#each teams as team}
                 <option value={team}>{team}</option>
             {/each}
         </select>
+
+        <label class="flex items-center space-x-2">
+            <input type="checkbox" bind:checked={showBothTeams} on:change={handleBothTeamsToggle}>
+            <span>Näita mõlemat tiimi</span>
+        </label>
     </div>
 
     {#if isLoading}
-        <p>Loading...</p>
+        <p>Laen andmeid...</p>
     {:else}
         <div class="overflow-x-auto">
             <table class="min-w-full border border-gray-700 rounded-xl">
                 <thead class="bg-[#03538b]">
                 <tr>
+                    <th class="px-3 py-2">TEAM</th>
                     {#each columns as col}
                         <th
                                 class="px-3 py-2 cursor-pointer text-left select-none"
@@ -133,10 +153,12 @@
                 <tbody>
                 {#each players as p}
                     <tr class="odd:bg-[#001233] even:bg-[#002b5c] hover:bg-[#023e7d]">
-                        <td class="px-3 py-2 font-semibold"><a
-                                href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}>
-                            {p.NAME}
-                        </a></td>
+                        <td class="px-3 py-2 font-bold">{p.TEAM}</td>
+                        <td class="px-3 py-2 font-semibold">
+                            <a href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}>
+                                {p.NAME}
+                            </a>
+                        </td>
                         <td class="px-3 py-2">{p.GAMES}</td>
                         <td class="px-3 py-2">{p.PTS}</td>
                         <td class="px-3 py-2">{p.REB}</td>
