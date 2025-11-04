@@ -11,9 +11,9 @@
         message = "";
         try {
             await loginWithEmail(email, password);
-            message = "✅ Sisselogitud!";
+            window.location.hash = "/";
         } catch (err: any) {
-            message = `❌ ${err.message}`;
+            message = `${err.message}`;
         }
     }
 </script>
@@ -91,7 +91,7 @@
 
     /* eemaldame autofill sinise tausta */
     input:-webkit-autofill {
-        -webkit-box-shadow: 0 0 0px 1000px #001048 inset !important;
+        -webkit-box-shadow: 0 0 0 1000px #001048 inset !important;
         -webkit-text-fill-color: #fff !important;
     }
 

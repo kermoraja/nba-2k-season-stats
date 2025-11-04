@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
   import Router from "svelte-spa-router";
   import routes from "./routes.js";
+  import { user } from "./lib/stores/userStore";
+  import { logoutUser } from "./lib/services/authService";
 </script>
 
 <main class="min-h-screen bg-[#000536] text-white">
@@ -10,14 +12,25 @@
         NBA League Stats
       </div>
 
-      <div class="hidden md:flex gap-8 text-[#9bd4ff] font-medium">
+      <div class="hidden md:flex gap-8 text-[#9bd4ff] font-medium items-center">
         <a href="#/" class="hover:text-[#03a9f4] transition-colors duration-300">Avaleht</a>
         <a href="#/upload" class="hover:text-[#03a9f4] transition-colors duration-300">Lae üles</a>
         <a href="#/full-statistics" class="hover:text-[#03a9f4] transition-colors duration-300">Kogu statistika</a>
         <a href="#/compare-players" class="hover:text-[#03a9f4] transition-colors duration-300">Võrdle mängijaid</a>
+
+        {#if $user}
+          <button
+                  on:click={logoutUser}
+                  class="bg-[#03538b] hover:bg-[#046ab8] px-3 py-1 rounded-md text-white transition"
+          >
+            Logi välja
+          </button>
+        {:else}
+          <a href="#/login" class="hover:text-[#03a9f4] transition-colors duration-300">Logi sisse</a>
+        {/if}
       </div>
 
-      <button id="menu-toggle" class="md:hidden text-[#03a9f4] focus:outline-none">
+      <button id="menu-toggle" class="md:hidden text-[#03a9f4] focus:outline-none" aria-label="Ava menüü">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 6h16M4 12h16M4 18h16" />
@@ -30,6 +43,17 @@
       <a href="#/upload" class="hover:text-[#03a9f4] transition-colors duration-300">Lae üles</a>
       <a href="#/full-statistics" class="hover:text-[#03a9f4] transition-colors duration-300">Kogu statistika</a>
       <a href="#/compare-players" class="hover:text-[#03a9f4] transition-colors duration-300">Võrdle mängijaid</a>
+
+      {#if $user}
+        <button
+                on:click={logoutUser}
+                class="bg-[#03538b] hover:bg-[#046ab8] px-3 py-2 rounded-md text-white transition text-left"
+        >
+          Logi välja
+        </button>
+      {:else}
+        <a href="#/login" class="hover:text-[#03a9f4] transition-colors duration-300">Logi sisse</a>
+      {/if}
     </div>
   </nav>
 

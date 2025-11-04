@@ -1,7 +1,8 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { params } from "svelte-spa-router";
-    import { collection, getDocs } from "firebase/firestore";
+    import { collection, getDocs, getDoc, updateDoc } from "firebase/firestore";
+    import { user } from "../../lib/stores/userStore";
     import { db } from "../../lib/firebase";
     import { getImageUrl } from "../../lib/utils/images";
 
@@ -13,8 +14,63 @@
     let loading = true;
     let playerImageUrl = "";
 
+    let showEditModal = false;
+    let selectedGame: any = null;
+    let editStats: Record<string, number | string> = {};
+
     $: rawParam = $params?.name ?? "";
     $: playerName = rawParam.replace("-", ". ");
+
+    function openEditModal(game: any) {
+        if (!$user) return;
+        selectedGame = game;
+        editStats = {
+            PTS: game.PTS,
+            REB: game.REB,
+            AST: game.AST,
+            STL: game.STL,
+            BLK: game.BLK,
+            TO: game.TO,
+            FLS: game.FLS,
+            FG: game.FG || "",
+            "3PT": game["3PT"] || "",
+            FT: game.FT || ""
+        };
+        showEditModal = true;
+    }
+
+    async function saveStats() {
+        if (!selectedGame?.ref) {
+            alert("Mängu dokumenti ei leitud.");
+            return;
+        }
+
+        try {
+            const path = selectedGame.IS_HOME
+                ? "HOME_TEAM_PLAYER_STATS"
+                : "AWAY_TEAM_PLAYER_STATS";
+
+            const snapshot = await getDoc(selectedGame.ref);
+            const data = snapshot.data();
+            if (!data) return alert("Andmeid ei leitud.");
+
+            const arr = data[path];
+            const playerIndex = arr.findIndex((p: any) => p.NAME === playerName);
+            if (playerIndex === -1) return alert("Mängijat ei leitud selles mängus.");
+
+            Object.entries(editStats).forEach(([key, val]) => {
+                arr[playerIndex][key] = val;
+            });
+
+            await updateDoc(selectedGame.ref, { [path]: arr });
+            alert("Statistika edukalt uuendatud!");
+            Object.assign(selectedGame, editStats);
+            showEditModal = false;
+        } catch (err) {
+            console.error(err);
+            alert("Viga andmete uuendamisel.");
+        }
+    }
 
     onMount(async () => {
         loading = true;
@@ -36,23 +92,23 @@
             if (!inHome && !inAway) return;
 
             const stat = (inHome ? homeArr : awayArr).find((p) => p.NAME === playerName);
-
             const isHome = inHome;
             const team = isHome ? data.HOME_TEAM : data.AWAY_TEAM;
             const opponent = isHome ? data.AWAY_TEAM : data.HOME_TEAM;
-            const locMarker = isHome ? "vs" : "@"; // ilus märgistus
+            const locMarker = isHome ? "vs" : "@";
 
             const awayScore = data.GAME_SUMMARY?.AWAY_TEAM_TOTAL || 0;
             const homeScore = data.GAME_SUMMARY?.HOME_TEAM_TOTAL || 0;
 
             playerGames.push({
+                id: doc.id,
+                ref: doc.ref,
                 SEASON: data.SEASON,
                 GAME_DATE: data.GAME_DATE,
                 TEAM: team,
                 OPPONENT: opponent,
                 IS_HOME: isHome,
                 VS_LABEL: `${locMarker} ${opponent}`,
-                SCORE: `${homeScore} - ${awayScore}`,
                 SCORE_DETAIL: isHome
                     ? `${team} ${homeScore} - ${awayScore} ${opponent}`
                     : `${team} ${awayScore} - ${homeScore} ${opponent}`,
@@ -150,6 +206,7 @@
             </div>
         </div>
 
+        <!-- HOOAJA KESKMISED -->
         <div class="bg-[#001048] rounded-2xl p-6 mb-6 shadow-lg">
             <h2 class="text-xl font-semibold mb-3 text-[#03a9f4]">🏀 Hooaja keskmised</h2>
             <div class="grid grid-cols-3 md:grid-cols-6 gap-4 text-center">
@@ -162,8 +219,10 @@
             </div>
         </div>
 
+        <!-- MÄNGUD -->
         <h2 class="text-xl font-semibold mb-3 text-[#03a9f4]">📅 Mängud hooajal {selectedSeason}</h2>
-        <table class="hidden sm:table w-full text-sm rounded-xl overflow-hidden border border-[#02315e]">
+
+        <table class="w-full text-sm rounded-xl overflow-hidden border border-[#02315e]">
             <thead class="bg-[#03538b]">
             <tr>
                 <th class="py-2 px-3 text-left">Kuupäev</th>
@@ -179,6 +238,9 @@
                 <th class="py-2 px-3 text-center">FG</th>
                 <th class="py-2 px-3 text-center">3PT</th>
                 <th class="py-2 px-3 text-center">FT</th>
+                {#if $user}
+                    <th class="py-2 px-3 text-center">Muuda</th>
+                {/if}
             </tr>
             </thead>
 
@@ -198,64 +260,83 @@
                     <td class="text-center">{g.FG || "-"}</td>
                     <td class="text-center">{g["3PT"] || "-"}</td>
                     <td class="text-center">{g.FT || "-"}</td>
+                    {#if $user}
+                        <td class="text-center">
+                            <button
+                                    class="px-2 py-1 bg-[#03538b] hover:bg-[#046ab8] rounded text-white text-xs"
+                                    on:click={() => openEditModal(g)}
+                            >
+                                ✏️
+                            </button>
+                        </td>
+                    {/if}
                 </tr>
             {/each}
             </tbody>
         </table>
 
-        <div class="sm:hidden space-y-4">
-            {#each games as g}
-                <div class="bg-[#00093a]/60 backdrop-blur-md border border-[#03538b]/50 rounded-2xl p-4 shadow-lg hover:shadow-[#03538b]/30 transition-all">
-                    <div class="flex justify-between items-center text-sm text-[#8fbce6] mb-3">
-                        <span class="font-medium">{g.GAME_DATE}</span>
-                        <span class="uppercase text-xs bg-[#03538b]/20 px-2 py-0.5 rounded-md">
-                        {g.VS_LABEL}
-                        </span>
+        {#if showEditModal}
+            <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+                <div class="relative bg-[#00154f] border border-[#03538b] rounded-2xl shadow-2xl w-full max-w-md p-5 text-white animate-fadeIn">
+                    <button
+                            class="absolute top-2 right-2 text-gray-400 hover:text-white transition"
+                            on:click={() => (showEditModal = false)}
+                            aria-label="Sulge"
+                    >
+                        ✕
+                    </button>
+
+                    <h2 class="text-lg font-semibold text-[#03a9f4] mb-3">
+                        Muuda mängu <span class="text-white">{selectedGame?.GAME_DATE}</span>
+                    </h2>
+                    <p class="text-sm text-gray-300 mb-4">{selectedGame?.TEAM} {selectedGame?.VS_LABEL}</p>
+
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        {#each Object.keys(editStats) as key}
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wide">{key}</label>
+                                <input
+                                        type="text"
+                                        bind:value={editStats[key]}
+                                        class="w-full px-2 py-1.5 text-sm rounded-md bg-[#002366] border border-[#03538b] focus:outline-none focus:ring-2 focus:ring-[#03a9f4] transition"
+                                />
+                            </div>
+                        {/each}
                     </div>
 
-                    <div class="grid grid-cols-3 gap-y-3 text-center text-white text-sm">
-                        <div>
-                            <div class="text-[#8fbce6] text-xs font-semibold">PTS</div>
-                            <div class="text-lg font-bold">{g.PTS}</div>
-                        </div>
-                        <div>
-                            <div class="text-[#8fbce6] text-xs font-semibold">REB</div>
-                            <div class="text-lg font-bold">{g.REB}</div>
-                        </div>
-                        <div>
-                            <div class="text-[#8fbce6] text-xs font-semibold">AST</div>
-                            <div class="text-lg font-bold">{g.AST}</div>
-                        </div>
-
-                        <div>
-                            <div class="text-[#8fbce6] text-xs font-semibold">STL</div>
-                            <div class="text-lg font-bold">{g.STL}</div>
-                        </div>
-                        <div>
-                            <div class="text-[#8fbce6] text-xs font-semibold">BLK</div>
-                            <div class="text-lg font-bold">{g.BLK}</div>
-                        </div>
-                        <div>
-                            <div class="text-[#8fbce6] text-xs font-semibold">TO</div>
-                            <div class="text-lg font-bold">{g.TO}</div>
-                        </div>
-                        <div>
-                            <div class="text-[#8fbce6] text-xs font-semibold">FG%</div>
-                            <div class="text-lg font-bold">{g.FG}</div>
-                        </div>
-                        <div>
-                            <div class="text-[#8fbce6] text-xs font-semibold">3PT%</div>
-                            <div class="text-lg font-bold">{g["3PT"]}</div>
-                        </div>
-                        <div>
-                            <div class="text-[#8fbce6] text-xs font-semibold">FT%</div>
-                            <div class="text-lg font-bold">{g.FT}</div>
-                        </div>
-
+                    <div class="flex justify-end gap-3">
+                        <button
+                                class="px-3 py-1.5 text-sm bg-gray-600 hover:bg-gray-500 rounded-md transition"
+                                on:click={() => (showEditModal = false)}
+                        >
+                            Loobu
+                        </button>
+                        <button
+                                class="px-3 py-1.5 text-sm bg-[#03538b] hover:bg-[#046ab8] rounded-md transition"
+                                on:click={saveStats}
+                        >
+                            Salvesta
+                        </button>
                     </div>
                 </div>
-            {/each}
-        </div>
+            </div>
+
+            <style>
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.95);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                }
+                .animate-fadeIn {
+                    animation: fadeIn 0.2s ease-out;
+                }
+            </style>
+        {/if}
     {/if}
 </main>
 
