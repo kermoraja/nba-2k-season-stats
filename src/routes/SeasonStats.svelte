@@ -28,9 +28,36 @@
         teamStats = teams;
 
         players.forEach(p => {
-            const missedFG = p.FG_ATT - p.FG_MADE;
-            const missedFT = p.FT_ATT - p.FT_MADE;
-            p.mvpIndex = (p.PTS + p.REB + p.AST + p.STL + p.BLK) - (missedFG + missedFT + p.TO);
+            const FG_PCT = Number(p.FG_PCT) || 0;
+            const TP_PCT = Number(p.TP_PCT) || 0;
+            const FT_PCT = Number(p.FT_PCT) || 0;
+            const PTS = Number(p.PTS) || 0;
+            const REB = Number(p.REB) || 0;
+            const AST = Number(p.AST) || 0;
+            const STL = Number(p.STL) || 0;
+            const BLK = Number(p.BLK) || 0;
+            const TO = Number(p.TO) || 0;
+            const MIN = Number(p.MIN) || 0;
+            const GAMES = Number(p.GAMES) || 0;
+
+            const efficiencyBoost =
+                ((FG_PCT - 50) * 0.25) +
+                ((TP_PCT - 35) * 0.15) +
+                ((FT_PCT - 75) * 0.05);
+
+            const GIS =
+                PTS +
+                1.2 * REB +
+                1.5 * AST +
+                3 * STL +
+                2.5 * BLK -
+                1.3 * TO +
+                efficiencyBoost;
+
+            const minuteFactor = MIN / 24;
+            const playFactor = Math.pow(GAMES / 7, 1.4);
+
+            p.mvpIndex = GIS * minuteFactor * playFactor;
         });
 
         const sortedByMVP = [...players].sort((a, b) => b.mvpIndex - a.mvpIndex);
