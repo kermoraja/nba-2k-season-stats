@@ -54,7 +54,7 @@
                 1.3 * TO +
                 efficiencyBoost;
 
-            const minuteFactor = MIN / 24;
+            const minuteFactor = MIN / 28
             const playFactor = Math.pow(GAMES / 7, 1.4);
 
             p.mvpIndex = GIS * minuteFactor * playFactor;
