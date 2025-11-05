@@ -14,9 +14,10 @@
 
       <div class="hidden md:flex gap-8 text-[#9bd4ff] font-medium items-center">
         <a href="#/" class="hover:text-[#03a9f4] transition-colors duration-300">Avaleht</a>
-        <a href="#/upload" class="hover:text-[#03a9f4] transition-colors duration-300">Lae üles</a>
         <a href="#/full-statistics" class="hover:text-[#03a9f4] transition-colors duration-300">Kogu statistika</a>
         <a href="#/compare-players" class="hover:text-[#03a9f4] transition-colors duration-300">Võrdle mängijaid</a>
+        <a href="#/upload" class="hover:text-[#03a9f4] transition-colors duration-300">Lae üles</a>
+        <a href="#/game-photos" class="hover:text-[#03a9f4] transition-colors duration-300">Mängupildid</a>
 
         {#if $user}
           <button
@@ -40,9 +41,10 @@
 
     <div id="mobile-menu" class="hidden md:hidden flex-col bg-[#000a6e]/95 text-[#9bd4ff] px-6 pb-4 space-y-3">
       <a href="#/" class="hover:text-[#03a9f4] transition-colors duration-300">Avaleht</a>
-      <a href="#/upload" class="hover:text-[#03a9f4] transition-colors duration-300">Lae üles</a>
       <a href="#/full-statistics" class="hover:text-[#03a9f4] transition-colors duration-300">Kogu statistika</a>
       <a href="#/compare-players" class="hover:text-[#03a9f4] transition-colors duration-300">Võrdle mängijaid</a>
+      <a href="#/upload" class="hover:text-[#03a9f4] transition-colors duration-300">Lae üles</a>
+      <a href="#/game-photos" class="hover:text-[#03a9f4] transition-colors duration-300">Mängu pildid</a>
 
       {#if $user}
         <button

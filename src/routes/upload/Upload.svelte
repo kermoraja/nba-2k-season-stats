@@ -6,7 +6,7 @@
 
     let team1File: File | null = null;
     let team2File: File | null = null;
-    let season = "Hawk-Jazz-1";
+    let season = "Hawks-Jazz-1";
     let status = "";
 
     async function handleUpload() {
@@ -82,7 +82,7 @@
 {:else if !$user}
     <LoginForm />
 {:else}
-    <main class="min-h-screen flex items-center justify-center bg-[#f4f6fa] p-4">
+    <main class="min-h-screen flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-lg rounded-2xl shadow-lg p-8 border border-gray-100">
             <h1 class="text-2xl font-semibold text-[#03538b] text-center mb-6">
                 📤 Lae üles mängu statistika
