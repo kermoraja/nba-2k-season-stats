@@ -152,3 +152,13 @@ export async function getSeasonStats(
         teams: finalTeams
     }
 }
+
+export async function getAllSeasons(): Promise<string[]> {
+    const snapshot = await getDocs(collection(db, "games"))
+    const seasons = new Set<string>()
+    snapshot.forEach(doc => {
+        const data = doc.data()
+        if (data.SEASON) seasons.add(data.SEASON)
+    })
+    return Array.from(seasons)
+}
