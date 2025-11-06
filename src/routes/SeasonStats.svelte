@@ -1,6 +1,6 @@
 <script>
-    import { onMount } from "svelte";
-    import { getAvailableSeasons, getSeasonStats } from "../lib/services/statsService";
+    import {onMount} from "svelte";
+    import {getAvailableSeasons, getSeasonStats} from "../lib/services/statsService";
     import SeasonSelector from "../components/SeasonSelector.svelte";
     import StatSelector from "../components/StatSelector.svelte";
     import TopPlayers from "../components/TopPlayers.svelte";
@@ -18,13 +18,13 @@
 
     onMount(async () => {
         seasons = await getAvailableSeasons();
-        selectedSeason = seasons[0];
+        selectedSeason = seasons[(seasons.length - 1)];
         await loadStats();
     });
 
     async function loadStats() {
         loading = true;
-        const { players, teams } = await getSeasonStats(selectedSeason);
+        const {players, teams} = await getSeasonStats(selectedSeason);
         teamStats = teams;
 
         players.forEach(p => {
@@ -96,24 +96,26 @@
 
     <div class="flex flex-col md:flex-row items-center justify-center gap-6 w-full max-w-5xl mb-12">
         <div class="flex flex-col items-center w-full md:w-1/3">
-            <SeasonSelector {seasons} {selectedSeason} onChange={handleSeasonChange} />
+            <SeasonSelector {seasons} {selectedSeason} onChange={handleSeasonChange}/>
         </div>
 
         <div class="flex flex-col items-center w-full md:w-1/3">
-            <StatSelector {selectedStat} onChange={handleStatChange} />
+            <StatSelector {selectedStat} onChange={handleStatChange}/>
         </div>
 
         {#if mvpPlayer}
             <div class="flex flex-col items-center bg-[#03538b]/20 border border-[#03538b]/40 rounded-2xl p-4 w-full md:w-1/3 text-center shadow-lg">
                 <h2 class="text-xl font-semibold text-[#00b0ff] mb-2">🏆 {mvpPlayer.name}</h2>
-                <img src={getImage(mvpPlayer)} alt={mvpPlayer.name} class="w-20 h-20 object-cover rounded-full mb-2 border-2 border-[#03538b]" />
+                <img src={getImage(mvpPlayer)} alt={mvpPlayer.name}
+                     class="w-20 h-20 object-cover rounded-full mb-2 border-2 border-[#03538b]"/>
                 <p class="text-sm text-[#00b0ff] font-semibold">MVP skoor: {round(mvpPlayer.mvpIndex)}</p>
 
                 {#if runnerUp}
                     <div class="mt-4 bg-[#03538b]/10 border border-[#03538b]/30 rounded-xl p-3 w-full">
                         <h3 class="text-sm font-semibold text-[#8fd6ff] mb-1">🥈 Runner-up: {runnerUp.name}</h3>
                         <div class="flex items-center justify-center gap-2">
-                            <img src={getImage(runnerUp)} alt={runnerUp.name} class="w-10 h-10 object-cover rounded-full border border-[#03538b]" />
+                            <img src={getImage(runnerUp)} alt={runnerUp.name}
+                                 class="w-10 h-10 object-cover rounded-full border border-[#03538b]"/>
                             <div class="text-xs opacity-80 text-left">
                                 <div>MVP skoor: {round(runnerUp.mvpIndex)}</div>
                             </div>
@@ -128,10 +130,10 @@
     {#if loading}
         <p class="text-center">⏳ Laen andmeid...</p>
     {:else}
-        <TopPlayers players={topPlayers} {selectedStat} />
+        <TopPlayers players={topPlayers} {selectedStat}/>
 
         {#each Object.entries(teamStats) as [teamName, players]}
-            <TeamSection {teamName} {players} {selectedStat} />
+            <TeamSection {teamName} {players} {selectedStat}/>
         {/each}
     {/if}
 </main>

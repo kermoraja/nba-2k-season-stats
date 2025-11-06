@@ -32,7 +32,7 @@
         isLoading = true
         seasons = await getAvailableSeasons()
         if (seasons.length > 0) {
-            selectedSeason = seasons[0]
+            selectedSeason = seasons[(seasons.length -1)]
             await loadSeasonStats()
         }
         isLoading = false

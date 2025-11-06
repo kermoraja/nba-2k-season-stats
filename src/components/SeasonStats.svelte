@@ -14,7 +14,7 @@
 
     onMount(async () => {
         seasons = await getAvailableSeasons();
-        selectedSeason = seasons[0];
+        selectedSeason = seasons[(seasons.length -1)];
         await loadStats();
     });
 
