@@ -13,6 +13,8 @@
     let averages: Record<string, number> = {};
     let loading = true;
     let playerImageUrl = "";
+    let playedSeasons: string[] = [];
+    let playerGames: any[] = [];
 
     let showEditModal = false;
     let selectedGame: any = null;
@@ -76,7 +78,6 @@
         loading = true;
         const snapshot = await getDocs(collection(db, "games"));
 
-        const playerGames: any[] = [];
         const seasonsSet = new Set<string>();
 
         snapshot.forEach((doc) => {
@@ -122,8 +123,16 @@
         playerGames.sort((a, b) => new Date(a.GAME_DATE).getTime() - new Date(b.GAME_DATE).getTime());
 
         allSeasons = Array.from(seasonsSet);
-        selectedSeason = allSeasons[0] ?? "";
-        games = playerGames.filter((g) => g.SEASON === selectedSeason);
+        playedSeasons = allSeasons.filter(season =>
+            playerGames.some(game => game.SEASON === season)
+        );
+
+        console.log('playerGames', playerGames);
+        console.log('allSeasons', allSeasons);
+        console.log('playedSeasons', playedSeasons);
+
+        selectedSeason = playerGames.find(g => g.SEASON)?.SEASON || playedSeasons[0];
+        games = playerGames.filter(g => g.SEASON === selectedSeason);
 
         if (games.length > 0) {
             calculateAverages();
@@ -182,7 +191,7 @@
 
     function handleSeasonChange(e: Event) {
         selectedSeason = (e.target as HTMLSelectElement).value;
-        games = games.filter((g) => g.SEASON === selectedSeason);
+        games = playerGames.filter((g) => g.SEASON === selectedSeason);
         calculateAverages();
     }
 </script>
@@ -199,7 +208,7 @@
                 <label class="text-sm opacity-80">Hooaeg:</label>
                 <select bind:value={selectedSeason} on:change={handleSeasonChange}
                         class="ml-2 px-2 py-1 bg-[#03538b] rounded-lg text-white border border-[#046ab8]">
-                    {#each allSeasons as season}
+                    {#each playedSeasons as season}
                         <option value={season}>{season}</option>
                     {/each}
                 </select>
