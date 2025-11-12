@@ -17,7 +17,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
         {#each top3 as p}
             <a
-                    href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}
+                    href={"#/player/" + p.NAME.replace(/\./g, "~").replace(/\s+/g, "-")}
                     class="w-full max-w-sm transition-transform hover:scale-[1.02]"
             >
                 <PlayerCard player={p} {selectedStat} />
@@ -28,8 +28,7 @@
     {#if others.length > 0}
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6 justify-items-center">
             {#each others as p}
-                <a
-                        href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}
+                <a href={"#/player/" + p.NAME.replace(/\./g, "~").replace(/\s+/g, "-")}
                         class="w-full max-w-sm transition-transform hover:scale-[1.02]"
                 >
                     <PlayerCard player={p} {selectedStat} />

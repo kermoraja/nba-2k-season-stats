@@ -13,8 +13,7 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 justify-items-center">
         {#each players as p}
-            <a
-                    href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}
+            <a href={"#/player/" + p.NAME.replace(/\./g, "~").replace(/\s+/g, "-")}
                     class="w-full max-w-sm transition-transform hover:scale-[1.02]"
             >
                 <PlayerCard player={p} {selectedStat} />

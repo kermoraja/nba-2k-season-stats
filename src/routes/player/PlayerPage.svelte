@@ -21,7 +21,7 @@
     let editStats: Record<string, number | string> = {};
 
     $: rawParam = $params?.name ?? "";
-    $: playerName = rawParam.replace("-", ". ");
+    $: playerName = rawParam.replace(/-/g, " ").replace(/~/g, ".");
 
     function openEditModal(game: any) {
         if (!$user) return;

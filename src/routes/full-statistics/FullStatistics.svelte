@@ -155,7 +155,7 @@
                     <tr class="odd:bg-[#001233] even:bg-[#002b5c] hover:bg-[#023e7d]">
                         <td class="px-3 py-2 font-bold">{p.TEAM}</td>
                         <td class="px-3 py-2 font-semibold">
-                            <a href={"#/player/" + p.NAME.replace(/\./g, "-").replace(/\s+/g, "")}>
+                            <a href={"#/player/" + p.NAME.replace(/\./g, "~").replace(/\s+/g, "-")}>
                                 {p.NAME}
                             </a>
                         </td>
