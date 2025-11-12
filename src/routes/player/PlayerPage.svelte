@@ -24,11 +24,16 @@
     let editingOverall = false;
     let newOverall: number | null = null;
 
+    let seasonAverages: Record<string, Record<string, number>> = {};
+    let seasonGameCounts: Record<string, number> = {}; // GP veeru jaoks
+
     $: rawParam = $params?.name ?? "";
     $: playerName = rawParam.replace(/-/g, " ").replace(/~/g, ".");
 
     function openEditModal(game: any) {
-        if (!$user) return;
+        if (!$user) {
+            return;
+        }
         selectedGame = game;
         editStats = {
             PTS: game.PTS,
@@ -151,12 +156,18 @@
             playerGames.some(game => game.SEASON === season)
         );
 
-        selectedSeason = playerGames.find(g => g.SEASON)?.SEASON || playedSeasons[0];
+        // Sorteeri ja vali automaatselt uusim hooaeg
+        playedSeasons.sort((a, b) => a.localeCompare(b));
+        const latestSeason = playedSeasons[playedSeasons.length - 1];
+        selectedSeason = latestSeason;
+
         games = playerGames.filter(g => g.SEASON === selectedSeason);
 
         if (games.length > 0) {
             calculateAverages();
         }
+
+        calculateSeasonAverages();
 
         playerImageUrl = getImageUrl(playerName);
 
@@ -218,6 +229,61 @@
         averages["FT%"] = totals.FT_Att > 0 ? parseFloat(((totals.FT_Made / totals.FT_Att) * 100).toFixed(1)) : 0;
     }
 
+    function calculateSeasonAverages() {
+        seasonAverages = {};
+        seasonGameCounts = {};
+        for (const season of playedSeasons) {
+            const seasonGames = playerGames.filter(g => g.SEASON === season);
+            if (seasonGames.length === 0) continue;
+
+            seasonGameCounts[season] = seasonGames.length;
+
+            const sum: Record<string, number> = {
+                PTS: 0, REB: 0, AST: 0, STL: 0, BLK: 0, TO: 0, FLS: 0,
+            };
+            const totals = {
+                FG_Made: 0,
+                FG_Att: 0,
+                TP_Made: 0,
+                TP_Att: 0,
+                FT_Made: 0,
+                FT_Att: 0,
+            };
+
+            seasonGames.forEach((g) => {
+                for (const key in sum) {
+                    sum[key] += Number(g[key] || 0);
+                }
+                if (g.FG) {
+                    const [m, a] = g.FG.split("-").map(Number);
+                    totals.FG_Made += m || 0;
+                    totals.FG_Att += a || 0;
+                }
+                if (g["3PT"]) {
+                    const [m, a] = g["3PT"].split("-").map(Number);
+                    totals.TP_Made += m || 0;
+                    totals.TP_Att += a || 0;
+                }
+                if (g.FT) {
+                    const [m, a] = g.FT.split("-").map(Number);
+                    totals.FT_Made += m || 0;
+                    totals.FT_Att += a || 0;
+                }
+            });
+
+            const totalGames = seasonGames.length;
+            const avg: Record<string, number> = {};
+            for (const key in sum) {
+                avg[key] = parseFloat((sum[key] / totalGames).toFixed(1));
+            }
+            avg["FG%"] = totals.FG_Att > 0 ? parseFloat(((totals.FG_Made / totals.FG_Att) * 100).toFixed(1)) : 0;
+            avg["3PT%"] = totals.TP_Att > 0 ? parseFloat(((totals.TP_Made / totals.TP_Att) * 100).toFixed(1)) : 0;
+            avg["FT%"] = totals.FT_Att > 0 ? parseFloat(((totals.FT_Made / totals.FT_Att) * 100).toFixed(1)) : 0;
+
+            seasonAverages[season] = avg;
+        }
+    }
+
     function handleSeasonChange(e: Event) {
         selectedSeason = (e.target as HTMLSelectElement).value;
         games = playerGames.filter((g) => g.SEASON === selectedSeason);
@@ -240,34 +306,17 @@
                         <span class="text-sm text-gray-300">Overall:</span>
 
                         {#if editingOverall}
-                            <input
-                                    type="number"
-                                    bind:value={newOverall}
-                                    min="25"
-                                    max="99"
-                                    class="w-16 px-2 py-1 text-sm rounded-md bg-[#002366] border border-[#03538b] focus:outline-none focus:ring-2 focus:ring-[#03a9f4]"
-                            />
-                            <button
-                                    class="px-2 py-1 bg-[#03538b] hover:bg-[#046ab8] rounded-md text-sm"
-                                    on:click={saveOverall}
-                            >
-                                💾
-                            </button>
-                            <button
-                                    class="px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded-md text-sm"
-                                    on:click={() => { editingOverall = false; newOverall = playerOverall; }}
-                            >
-                                ✕
-                            </button>
+                            <input type="number" bind:value={newOverall} min="25" max="99"
+                                   class="w-16 px-2 py-1 text-sm rounded-md bg-[#002366] border border-[#03538b] focus:outline-none focus:ring-2 focus:ring-[#03a9f4]" />
+                            <button class="px-2 py-1 bg-[#03538b] hover:bg-[#046ab8] rounded-md text-sm"
+                                    on:click={saveOverall}>💾</button>
+                            <button class="px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded-md text-sm"
+                                    on:click={() => { editingOverall = false; newOverall = playerOverall; }}>✕</button>
                         {:else}
                             <span class="text-lg font-bold text-yellow-400">{playerOverall}</span>
                             {#if $user}
-                                <button
-                                        class="ml-1 px-2 py-0.5 bg-[#03538b] hover:bg-[#046ab8] rounded-md text-xs"
-                                        on:click={() => editingOverall = true}
-                                >
-                                    ✏️
-                                </button>
+                                <button class="ml-1 px-2 py-0.5 bg-[#03538b] hover:bg-[#046ab8] rounded-md text-xs"
+                                        on:click={() => editingOverall = true}>✏️</button>
                             {/if}
                         {/if}
                     </div>
@@ -283,7 +332,7 @@
             </div>
         </div>
 
-        <!-- HOOAJA KESKMISED -->
+        <!-- Hooaja keskmised -->
         <div class="bg-[#001048] rounded-2xl p-6 mb-6 shadow-lg">
             <h2 class="text-xl font-semibold mb-3 text-[#03a9f4]">🏀 Hooaja keskmised</h2>
             <div class="grid grid-cols-3 md:grid-cols-6 gap-4 text-center">
@@ -296,9 +345,8 @@
             </div>
         </div>
 
-        <!-- MÄNGUD -->
+        <!-- Mängud -->
         <h2 class="text-xl font-semibold mb-3 text-[#03a9f4]">📅 Mängud hooajal {selectedSeason}</h2>
-
         <table class="w-full text-sm rounded-xl overflow-hidden border border-[#02315e]">
             <thead class="bg-[#03538b]">
             <tr>
@@ -315,12 +363,9 @@
                 <th class="py-2 px-3 text-center">FG</th>
                 <th class="py-2 px-3 text-center">3PT</th>
                 <th class="py-2 px-3 text-center">FT</th>
-                {#if $user}
-                    <th class="py-2 px-3 text-center">Muuda</th>
-                {/if}
+                {#if $user}<th class="py-2 px-3 text-center">Muuda</th>{/if}
             </tr>
             </thead>
-
             <tbody>
             {#each games as g}
                 <tr class="odd:bg-[#001048] even:bg-[#00093a] hover:bg-[#022c56] transition">
@@ -339,12 +384,8 @@
                     <td class="text-center">{g.FT || "-"}</td>
                     {#if $user}
                         <td class="text-center">
-                            <button
-                                    class="px-2 py-1 bg-[#03538b] hover:bg-[#046ab8] rounded text-white text-xs"
-                                    on:click={() => openEditModal(g)}
-                            >
-                                ✏️
-                            </button>
+                            <button class="px-2 py-1 bg-[#03538b] hover:bg-[#046ab8] rounded text-white text-xs"
+                                    on:click={() => openEditModal(g)}>✏️</button>
                         </td>
                     {/if}
                 </tr>
@@ -352,69 +393,102 @@
             </tbody>
         </table>
 
-        {#if showEditModal}
-            <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-                <div class="relative bg-[#00154f] border border-[#03538b] rounded-2xl shadow-2xl w-full max-w-md p-5 text-white animate-fadeIn">
+        <!-- Kõigi hooaegade keskmised -->
+        <h2 class="text-xl font-semibold mt-10 mb-3 text-[#03a9f4]">📊 Kõigi hooaegade keskmised</h2>
+        <table class="w-full text-sm rounded-xl overflow-hidden border border-[#02315e] mb-12">
+            <thead class="bg-[#03538b]">
+            <tr>
+                <th class="py-2 px-3 text-left">Hooaeg</th>
+                <th class="py-2 px-3 text-center">GP</th>
+                <th class="py-2 px-3 text-center">PTS</th>
+                <th class="py-2 px-3 text-center">REB</th>
+                <th class="py-2 px-3 text-center">AST</th>
+                <th class="py-2 px-3 text-center">STL</th>
+                <th class="py-2 px-3 text-center">BLK</th>
+                <th class="py-2 px-3 text-center">TO</th>
+                <th class="py-2 px-3 text-center">FLS</th>
+                <th class="py-2 px-3 text-center">FG%</th>
+                <th class="py-2 px-3 text-center">3PT%</th>
+                <th class="py-2 px-3 text-center">FT%</th>
+            </tr>
+            </thead>
+            <tbody>
+            {#each Object.entries(seasonAverages) as [season, stats]}
+                <tr class="odd:bg-[#001048] even:bg-[#00093a] hover:bg-[#022c56] transition">
+                    <td class="py-2 px-3">{season}</td>
+                    <td class="text-center">{seasonGameCounts[season]}</td>
+                    <td class="text-center">{stats.PTS}</td>
+                    <td class="text-center">{stats.REB}</td>
+                    <td class="text-center">{stats.AST}</td>
+                    <td class="text-center">{stats.STL}</td>
+                    <td class="text-center">{stats.BLK}</td>
+                    <td class="text-center">{stats.TO}</td>
+                    <td class="text-center">{stats.FLS}</td>
+                    <td class="text-center">{stats["FG%"]}</td>
+                    <td class="text-center">{stats["3PT%"]}</td>
+                    <td class="text-center">{stats["FT%"]}</td>
+                </tr>
+            {/each}
+            </tbody>
+        </table>
+    {/if}
+    {#if showEditModal}
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+            <div class="relative bg-[#00154f] border border-[#03538b] rounded-2xl shadow-2xl w-full max-w-md p-5 text-white animate-fadeIn">
+                <button
+                        class="absolute top-2 right-2 text-gray-400 hover:text-white transition"
+                        on:click={() => (showEditModal = false)}
+                        aria-label="Sulge"
+                >
+                    ✕
+                </button>
+
+                <h2 class="text-lg font-semibold text-[#03a9f4] mb-3">
+                    Muuda mängu <span class="text-white">{selectedGame?.GAME_DATE}</span>
+                </h2>
+                <p class="text-sm text-gray-300 mb-4">{selectedGame?.TEAM} {selectedGame?.VS_LABEL}</p>
+
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    {#each Object.keys(editStats) as key}
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wide">{key}</label>
+                            <input
+                                    type="text"
+                                    bind:value={editStats[key]}
+                                    class="w-full px-2 py-1.5 text-sm rounded-md bg-[#002366] border border-[#03538b] focus:outline-none focus:ring-2 focus:ring-[#03a9f4] transition"
+                            />
+                        </div>
+                    {/each}
+                </div>
+
+                <div class="flex justify-end gap-3">
                     <button
-                            class="absolute top-2 right-2 text-gray-400 hover:text-white transition"
+                            class="px-3 py-1.5 text-sm bg-gray-600 hover:bg-gray-500 rounded-md transition"
                             on:click={() => (showEditModal = false)}
-                            aria-label="Sulge"
                     >
-                        ✕
+                        Loobu
                     </button>
-
-                    <h2 class="text-lg font-semibold text-[#03a9f4] mb-3">
-                        Muuda mängu <span class="text-white">{selectedGame?.GAME_DATE}</span>
-                    </h2>
-                    <p class="text-sm text-gray-300 mb-4">{selectedGame?.TEAM} {selectedGame?.VS_LABEL}</p>
-
-                    <div class="grid grid-cols-2 gap-3 mb-4">
-                        {#each Object.keys(editStats) as key}
-                            <div>
-                                <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wide">{key}</label>
-                                <input
-                                        type="text"
-                                        bind:value={editStats[key]}
-                                        class="w-full px-2 py-1.5 text-sm rounded-md bg-[#002366] border border-[#03538b] focus:outline-none focus:ring-2 focus:ring-[#03a9f4] transition"
-                                />
-                            </div>
-                        {/each}
-                    </div>
-
-                    <div class="flex justify-end gap-3">
-                        <button
-                                class="px-3 py-1.5 text-sm bg-gray-600 hover:bg-gray-500 rounded-md transition"
-                                on:click={() => (showEditModal = false)}
-                        >
-                            Loobu
-                        </button>
-                        <button
-                                class="px-3 py-1.5 text-sm bg-[#03538b] hover:bg-[#046ab8] rounded-md transition"
-                                on:click={saveStats}
-                        >
-                            Salvesta
-                        </button>
-                    </div>
+                    <button
+                            class="px-3 py-1.5 text-sm bg-[#03538b] hover:bg-[#046ab8] rounded-md transition"
+                            on:click={saveStats}
+                    >
+                        Salvesta
+                    </button>
                 </div>
             </div>
+        </div>
 
-            <style>
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                        transform: scale(0.95);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: scale(1);
-                    }
-                }
-                .animate-fadeIn {
-                    animation: fadeIn 0.2s ease-out;
-                }
-            </style>
-        {/if}
+        <style>
+            @keyframes fadeIn {
+                from { opacity: 0; transform: scale(0.95); }
+                to { opacity: 1; transform: scale(1); }
+            }
+            .animate-fadeIn {
+                animation: fadeIn 0.2s ease-out;
+            }
+        </style>
     {/if}
+
 </main>
 
 <style>
