@@ -413,8 +413,8 @@
             </tr>
             </thead>
             <tbody>
-            {#each Object.entries(seasonAverages) as [season, stats]}
-                <tr class="odd:bg-[#001048] even:bg-[#00093a] hover:bg-[#022c56] transition">
+            {#each Object.entries(seasonAverages).sort((a, b) => b[0].localeCompare(a[0])) as [season, stats]}
+            <tr class="odd:bg-[#001048] even:bg-[#00093a] hover:bg-[#022c56] transition">
                     <td class="py-2 px-3">{season}</td>
                     <td class="text-center">{seasonGameCounts[season]}</td>
                     <td class="text-center">{stats.PTS}</td>
