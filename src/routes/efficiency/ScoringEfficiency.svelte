@@ -1,10 +1,8 @@
 <script lang="ts">
     import { onMount, afterUpdate   } from 'svelte';
     import Chart from 'chart.js/auto';
-    import type { PointElement } from 'chart.js';
     import annotationPlugin from 'chartjs-plugin-annotation';
     import { getAvailableSeasons, getSeasonStats, type PlayerStats } from '../../lib/services/statsService';
-    import { getPlayerImage } from "../../lib/utils/helpers";
     import { getImageUrl } from "../../lib/utils/images";
 
     Chart.register(annotationPlugin);
@@ -34,7 +32,6 @@
         isLoading = true;
         const { teams: teamStats } = await getSeasonStats(selectedSeason);
         teams = Object.keys(teamStats);
-        console.log('Raw teamStats:', teamStats);
         if (!selectedTeam && teams.length > 0) {
             selectedTeam = teams[0];
         }
@@ -56,23 +53,6 @@
         const imagePath = getImageUrl(player.NAME);
         const defaultImage = getImageUrl("default_player");
         return imagePath || defaultImage;
-    }
-
-    async function loadImagesWithUrls(players) {
-        const promises = players.map(async (p) => {
-            const imgUrl = await getImage(p);
-            return new Promise((resolve) => {
-                const img = new Image(40, 40);
-                img.src = imgUrl;
-                img.onload = () => resolve({ ...p, img });
-                img.onerror = () => {
-                    const fallback = new Image(40, 40);
-                    fallback.src = '/assets/player_images/default_player.jpg';
-                    resolve({ ...p, img: fallback });
-                };
-            });
-        });
-        return await Promise.all(promises);
     }
 
     function calcTS(fgMade: number, fgAtt: number, ftAtt: number, pts: number) {

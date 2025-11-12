@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { params } from "svelte-spa-router";
-    import { collection, getDocs, getDoc, updateDoc } from "firebase/firestore";
+    import { collection, getDocs, getDoc, updateDoc, doc } from "firebase/firestore";
     import { user } from "../../lib/stores/userStore";
     import { db } from "../../lib/firebase";
     import { getImageUrl } from "../../lib/utils/images";
@@ -19,6 +19,10 @@
     let showEditModal = false;
     let selectedGame: any = null;
     let editStats: Record<string, number | string> = {};
+
+    let playerOverall: number | null = null;
+    let editingOverall = false;
+    let newOverall: number | null = null;
 
     $: rawParam = $params?.name ?? "";
     $: playerName = rawParam.replace(/-/g, " ").replace(/~/g, ".");
@@ -74,6 +78,24 @@
         }
     }
 
+    async function saveOverall() {
+        try {
+            if (!newOverall || isNaN(newOverall)) {
+                alert("Palun sisesta korrektne number.");
+                return;
+            }
+            const playerId = rawParam.toLowerCase().replace(/~/g, ".");
+            const playerRef = doc(db, "players", playerId);
+            await updateDoc(playerRef, { overall: Number(newOverall) });
+            playerOverall = Number(newOverall);
+            editingOverall = false;
+            alert("Reiting uuendatud!");
+        } catch (err) {
+            console.error(err);
+            alert("Viga reitingu uuendamisel.");
+        }
+    }
+
     onMount(async () => {
         loading = true;
         const snapshot = await getDocs(collection(db, "games"));
@@ -90,7 +112,9 @@
             const inHome = homeArr.some((p) => p.NAME === playerName);
             const inAway = awayArr.some((p) => p.NAME === playerName);
 
-            if (!inHome && !inAway) return;
+            if (!inHome && !inAway) {
+                return;
+            }
 
             const stat = (inHome ? homeArr : awayArr).find((p) => p.NAME === playerName);
             const isHome = inHome;
@@ -127,10 +151,6 @@
             playerGames.some(game => game.SEASON === season)
         );
 
-        console.log('playerGames', playerGames);
-        console.log('allSeasons', allSeasons);
-        console.log('playedSeasons', playedSeasons);
-
         selectedSeason = playerGames.find(g => g.SEASON)?.SEASON || playedSeasons[0];
         games = playerGames.filter(g => g.SEASON === selectedSeason);
 
@@ -139,6 +159,15 @@
         }
 
         playerImageUrl = getImageUrl(playerName);
+
+        const playerId = rawParam.toLowerCase().replace(/~/g, ".");
+        const playerRef = doc(db, "players", playerId);
+        const playerSnap = await getDoc(playerRef);
+        if (playerSnap.exists()) {
+            playerOverall = playerSnap.data().overall ?? null;
+            newOverall = playerOverall;
+        }
+
         loading = false;
     });
 
@@ -205,6 +234,45 @@
                  class="w-28 h-28 rounded-xl object-cover border-2 border-[#03538b]"/>
             <div>
                 <h1 class="text-4xl font-bold text-[#03a9f4] mb-1">{playerName}</h1>
+
+                {#if playerOverall !== null}
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-sm text-gray-300">Overall:</span>
+
+                        {#if editingOverall}
+                            <input
+                                    type="number"
+                                    bind:value={newOverall}
+                                    min="25"
+                                    max="99"
+                                    class="w-16 px-2 py-1 text-sm rounded-md bg-[#002366] border border-[#03538b] focus:outline-none focus:ring-2 focus:ring-[#03a9f4]"
+                            />
+                            <button
+                                    class="px-2 py-1 bg-[#03538b] hover:bg-[#046ab8] rounded-md text-sm"
+                                    on:click={saveOverall}
+                            >
+                                💾
+                            </button>
+                            <button
+                                    class="px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded-md text-sm"
+                                    on:click={() => { editingOverall = false; newOverall = playerOverall; }}
+                            >
+                                ✕
+                            </button>
+                        {:else}
+                            <span class="text-lg font-bold text-yellow-400">{playerOverall}</span>
+                            {#if $user}
+                                <button
+                                        class="ml-1 px-2 py-0.5 bg-[#03538b] hover:bg-[#046ab8] rounded-md text-xs"
+                                        on:click={() => editingOverall = true}
+                                >
+                                    ✏️
+                                </button>
+                            {/if}
+                        {/if}
+                    </div>
+                {/if}
+
                 <label class="text-sm opacity-80">Hooaeg:</label>
                 <select bind:value={selectedSeason} on:change={handleSeasonChange}
                         class="ml-2 px-2 py-1 bg-[#03538b] rounded-lg text-white border border-[#046ab8]">

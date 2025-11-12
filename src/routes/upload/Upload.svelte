@@ -1,13 +1,27 @@
 <script lang="ts">
-    import { doc, setDoc } from "firebase/firestore";
+    import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
     import { db } from "../../lib/firebase";
     import { user, loadingUser } from "../../lib/stores/userStore";
-    import LoginForm from "../../components/Login.svelte"
+    import LoginForm from "../../components/Login.svelte";
 
     let team1File: File | null = null;
     let team2File: File | null = null;
     let season = "Hawks-Jazz-1";
     let status = "";
+
+    function handleTeam1File(e: Event) {
+        const input = e.target as HTMLInputElement;
+        if (input?.files?.length) {
+            team1File = input.files[0];
+        }
+    }
+
+    function handleTeam2File(e: Event) {
+        const input = e.target as HTMLInputElement;
+        if (input?.files?.length) {
+            team2File = input.files[0];
+        }
+    }
 
     async function handleUpload() {
         if (!team1File || !team2File) {
@@ -41,18 +55,50 @@
                 });
             }
 
+            const awayTeam = team1.TEAM_STATS || "AWAY";
+            const homeTeam = team2.TEAM_STATS || "HOME";
+
+            const awayPlayers = fillMissingStats(team1.PLAYER_STATS);
+            const homePlayers = fillMissingStats(team2.PLAYER_STATS);
+
             const gameData = {
                 SEASON: season,
                 GAME_DATE: new Date().toISOString().split("T")[0],
-                AWAY_TEAM: team1.TEAM_STATS || "AWAY",
-                HOME_TEAM: team2.TEAM_STATS || "HOME",
-                AWAY_TEAM_PLAYER_STATS: fillMissingStats(team1.PLAYER_STATS),
-                HOME_TEAM_PLAYER_STATS: fillMissingStats(team2.PLAYER_STATS),
+                AWAY_TEAM: awayTeam,
+                HOME_TEAM: homeTeam,
+                AWAY_TEAM_PLAYER_STATS: awayPlayers,
+                HOME_TEAM_PLAYER_STATS: homePlayers,
                 GAME_SUMMARY: {
                     AWAY_TEAM_TOTAL: team1.GAME_SUMMARY?.AWAY_TEAM_SCORE?.TOTAL || null,
                     HOME_TEAM_TOTAL: team2.GAME_SUMMARY?.HOME_TEAM_SCORE?.TOTAL || null,
                 },
             };
+
+            async function addPlayersToCollection(players, teamName) {
+                for (const p of players) {
+                    if (!p.NAME || p.NAME.toLowerCase() === "total") {
+                        continue;
+                    }
+
+                    const playerId = p.NAME.toLowerCase().replace(/\s+/g, "-");
+                    const playerRef = doc(db, "players", playerId);
+                    const playerSnap = await getDoc(playerRef);
+
+                    if (!playerSnap.exists()) {
+                        await setDoc(playerRef, {
+                            name: p.NAME,
+                            team: teamName,
+                            overall: 75, // ainult reiting
+                            createdAt: new Date().toISOString()
+                        });
+                    } else {
+                        await updateDoc(playerRef, { team: teamName });
+                    }
+                }
+            }
+
+            await addPlayersToCollection(awayPlayers, awayTeam);
+            await addPlayersToCollection(homePlayers, homeTeam);
 
             const randomIndicator = Math.floor(1000 + Math.random() * 9000);
             const gameId = `${gameData.AWAY_TEAM}-vs-${gameData.HOME_TEAM}-${gameData.GAME_DATE}-${randomIndicator}`;
@@ -64,16 +110,6 @@
             console.error(err);
             status = "Tekkis viga üleslaadimisel!";
         }
-    }
-
-    function handleTeam1File(e: Event) {
-        const input = e.target as HTMLInputElement;
-        if (input?.files?.length) team1File = input.files[0];
-    }
-
-    function handleTeam2File(e: Event) {
-        const input = e.target as HTMLInputElement;
-        if (input?.files?.length) team2File = input.files[0];
     }
 </script>
 
@@ -99,8 +135,8 @@
                             accept=".json"
                             on:change={handleTeam1File}
                             class="block w-full text-sm text-gray-600 border border-gray-300 rounded-lg cursor-pointer bg-white
-              focus:outline-none focus:ring-2 focus:ring-[#03538b] file:py-2 file:px-4 file:rounded-lg
-              file:border-0 file:text-sm file:font-semibold file:bg-[#03538b] file:text-white hover:file:bg-[#046ab8]"
+                            focus:outline-none focus:ring-2 focus:ring-[#03538b] file:py-2 file:px-4 file:rounded-lg
+                            file:border-0 file:text-sm file:font-semibold file:bg-[#03538b] file:text-white hover:file:bg-[#046ab8]"
                     />
                 </div>
 
@@ -114,8 +150,8 @@
                             accept=".json"
                             on:change={handleTeam2File}
                             class="block w-full text-sm text-gray-600 border border-gray-300 rounded-lg cursor-pointer bg-white
-              focus:outline-none focus:ring-2 focus:ring-[#03538b] file:py-2 file:px-4 file:rounded-lg
-              file:border-0 file:text-sm file:font-semibold file:bg-[#03538b] file:text-white hover:file:bg-[#046ab8]"
+                            focus:outline-none focus:ring-2 focus:ring-[#03538b] file:py-2 file:px-4 file:rounded-lg
+                            file:border-0 file:text-sm file:font-semibold file:bg-[#03538b] file:text-white hover:file:bg-[#046ab8]"
                     />
                 </div>
 
