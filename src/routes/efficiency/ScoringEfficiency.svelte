@@ -98,7 +98,7 @@
             chart.destroy();
         }
 
-        const MIN_FGA = 5;
+        const MIN_FGA = 3;
         const MIN_MIN = 7;
         const MIN_GAMES = 2;
 
