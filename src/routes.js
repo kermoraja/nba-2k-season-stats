@@ -5,11 +5,13 @@ import FullStatistics from "./routes/full-statistics/FullStatistics.svelte";
 import ComparePlayers from "./routes/compare-players/ComparePlayers.svelte";
 import LoginForm from "./components/Login.svelte";
 import GamePhotos from "./routes/game-photos/GamePhotos.svelte";
+import ScoringEfficiency from "./routes/efficiency/ScoringEfficiency.svelte";
 
 export default {
     "/": SeasonStats,
     "/player/:name": PlayerPage,
     "/full-statistics": FullStatistics,
+    "/efficiency": ScoringEfficiency,
     "/compare-players": ComparePlayers,
     "/upload": Upload,
     "/game-photos": GamePhotos,

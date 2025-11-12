@@ -16,6 +16,7 @@
         <a href="#/" class="hover:text-[#03a9f4] transition-colors duration-300">Avaleht</a>
         <a href="#/full-statistics" class="hover:text-[#03a9f4] transition-colors duration-300">Kogu statistika</a>
         <a href="#/compare-players" class="hover:text-[#03a9f4] transition-colors duration-300">Võrdle mängijaid</a>
+        <a href="#/efficiency" class="hover:text-[#03a9f4] transition-colors duration-300">Efficiency</a>
         <a href="#/upload" class="hover:text-[#03a9f4] transition-colors duration-300">Lae üles</a>
         <a href="#/game-photos" class="hover:text-[#03a9f4] transition-colors duration-300">Mängupildid</a>
 
@@ -43,6 +44,7 @@
       <a href="#/" class="hover:text-[#03a9f4] transition-colors duration-300">Avaleht</a>
       <a href="#/full-statistics" class="hover:text-[#03a9f4] transition-colors duration-300">Kogu statistika</a>
       <a href="#/compare-players" class="hover:text-[#03a9f4] transition-colors duration-300">Võrdle mängijaid</a>
+      <a href="#/efficiency" class="hover:text-[#03a9f4] transition-colors duration-300">Efficiency</a>
       <a href="#/upload" class="hover:text-[#03a9f4] transition-colors duration-300">Lae üles</a>
       <a href="#/game-photos" class="hover:text-[#03a9f4] transition-colors duration-300">Mängu pildid</a>
 
