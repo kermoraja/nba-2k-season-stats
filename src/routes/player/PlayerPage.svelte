@@ -37,6 +37,7 @@
         selectedGame = game;
         editStats = {
             PTS: game.PTS,
+            MIN: game.MIN,
             REB: game.REB,
             AST: game.AST,
             STL: game.STL,
@@ -156,7 +157,6 @@
             playerGames.some(game => game.SEASON === season)
         );
 
-        // Sorteeri ja vali automaatselt uusim hooaeg
         playedSeasons.sort((a, b) => a.localeCompare(b));
         const latestSeason = playedSeasons[playedSeasons.length - 1];
         selectedSeason = latestSeason;
@@ -184,7 +184,7 @@
 
     function calculateAverages() {
         const sum: Record<string, number> = {
-            PTS: 0, REB: 0, AST: 0, STL: 0, BLK: 0, TO: 0, FLS: 0,
+            MIN: 0,PTS: 0, REB: 0, AST: 0, STL: 0, BLK: 0, TO: 0, FLS: 0,
         };
 
         const totals = {
@@ -239,7 +239,7 @@
             seasonGameCounts[season] = seasonGames.length;
 
             const sum: Record<string, number> = {
-                PTS: 0, REB: 0, AST: 0, STL: 0, BLK: 0, TO: 0, FLS: 0,
+                MIN: 0, PTS: 0, REB: 0, AST: 0, STL: 0, BLK: 0, TO: 0, FLS: 0,
             };
             const totals = {
                 FG_Made: 0,
@@ -338,7 +338,7 @@
             <div class="grid grid-cols-3 md:grid-cols-6 gap-4 text-center">
                 {#each Object.entries(averages) as [key, val]}
                     <div class="bg-[#022c56] p-3 rounded-xl">
-                        <div class="text-lg font-bold text-[#03a9f4]">{val}</div>
+                        <div class="text-lg font-bold text-[#03a9f4]">{val.toFixed(1)}</div>
                         <div class="text-xs opacity-70">{key}</div>
                     </div>
                 {/each}
@@ -353,6 +353,7 @@
                 <th class="py-2 px-3 text-left">Kuupäev</th>
                 <th class="py-2 px-3 text-left">Mäng</th>
                 <th class="py-2 px-3 text-left">Skoor</th>
+                <th class="py-2 px-3 text-center">MIN</th>
                 <th class="py-2 px-3 text-center">PTS</th>
                 <th class="py-2 px-3 text-center">REB</th>
                 <th class="py-2 px-3 text-center">AST</th>
@@ -372,6 +373,7 @@
                     <td class="py-2 px-3">{g.GAME_DATE}</td>
                     <td class="px-3">{g.VS_LABEL}</td>
                     <td class="text-left">{g.SCORE_DETAIL} <span class="ml-1 font-bold text-[#03a9f4]">{g.RESULT}</span></td>
+                    <td class="text-center">{g.MIN}</td>
                     <td class="text-center">{g.PTS}</td>
                     <td class="text-center">{g.REB}</td>
                     <td class="text-center">{g.AST}</td>
@@ -400,6 +402,7 @@
             <tr>
                 <th class="py-2 px-3 text-left">Hooaeg</th>
                 <th class="py-2 px-3 text-center">GP</th>
+                <th class="py-2 px-3 text-center">MIN</th>
                 <th class="py-2 px-3 text-center">PTS</th>
                 <th class="py-2 px-3 text-center">REB</th>
                 <th class="py-2 px-3 text-center">AST</th>
@@ -417,13 +420,14 @@
             <tr class="odd:bg-[#001048] even:bg-[#00093a] hover:bg-[#022c56] transition">
                     <td class="py-2 px-3">{season}</td>
                     <td class="text-center">{seasonGameCounts[season]}</td>
-                    <td class="text-center">{stats.PTS}</td>
-                    <td class="text-center">{stats.REB}</td>
-                    <td class="text-center">{stats.AST}</td>
-                    <td class="text-center">{stats.STL}</td>
-                    <td class="text-center">{stats.BLK}</td>
-                    <td class="text-center">{stats.TO}</td>
-                    <td class="text-center">{stats.FLS}</td>
+                    <td class="text-center">{stats.MIN.toFixed(1)}</td>
+                    <td class="text-center">{stats.PTS.toFixed(1)}</td>
+                    <td class="text-center">{stats.REB.toFixed(1)}</td>
+                    <td class="text-center">{stats.AST.toFixed(1)}</td>
+                    <td class="text-center">{stats.STL.toFixed(1)}</td>
+                    <td class="text-center">{stats.BLK.toFixed(1)}</td>
+                    <td class="text-center">{stats.TO.toFixed(1)}</td>
+                    <td class="text-center">{stats.FLS.toFixed(1)}</td>
                     <td class="text-center">{stats["FG%"]}</td>
                     <td class="text-center">{stats["3PT%"]}</td>
                     <td class="text-center">{stats["FT%"]}</td>
