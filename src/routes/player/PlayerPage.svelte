@@ -105,6 +105,14 @@
 
     async function reloadPlayerData() {
         loading = true;
+        playerGames = [];
+        games = [];
+        playedSeasons = [];
+        teammates = [];
+        averages = {};
+        seasonAverages = {};
+        seasonGameCounts = {};
+
         const snapshot = await getDocs(collection(db, "games"));
         const seasonsSet = new Set<string>();
 
