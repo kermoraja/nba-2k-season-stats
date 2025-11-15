@@ -6,45 +6,136 @@
     let loading = true;
     let teamStats: Record<string, any> = {};
 
-    onMount(loadStats);
+    onMount(() => {
+        if (seasonName) {
+            loadStats();
+        }
+    });
+
     $: if (seasonName) {
         loadStats();
     }
 
     async function loadStats() {
         loading = true;
-        if (!seasonName) {
-            return;
+        try {
+            if (!seasonName) {
+                teamStats = {};
+                loading = false;
+                return;
+            }
+            const result = await getTeamSeasonStats(seasonName);
+            teamStats = result || {};
+        } catch (err) {
+            console.error("Viga tiimide statistika laadimisel:", err);
+            teamStats = {};
+        } finally {
+            loading = false;
         }
-        teamStats = await getTeamSeasonStats(seasonName);
-        loading = false;
+    }
+
+    function formatNum(val) {
+        return (val && !isNaN(val)) ? Number(val).toFixed(1) : "-";
+    }
+
+    function formatDiff(diff) {
+        const d = Number(diff) || 0;
+        return d > 0 ? `+${d.toFixed(1)}` : d.toFixed(1);
     }
 </script>
 
-<div class="bg-[#03538b]/10 border border-[#03538b]/30 rounded-2xl p-4 md:p-6 w-full shadow-md">
-    <h3 class="text-base md:text-lg font-semibold text-[#00b0ff] mb-4 text-center flex items-center justify-center gap-2">
-        📊 Tiimide hooaja keskmised
-    </h3>
+<div class="bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-slate-700/50 rounded-2xl p-6 md:p-8 w-full shadow-2xl backdrop-blur-md">
+    <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
+            <span class="text-xl">📊</span>
+        </div>
+        <h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">
+            Tiimide hooaja keskmised
+        </h3>
+    </div>
 
     {#if loading}
-        <p class="text-center text-sm text-gray-400">⏳ Laen tiimide andmeid...</p>
+        <div class="flex flex-col items-center justify-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-slate-600 border-t-blue-500 mb-4"></div>
+            <p class="text-slate-400 text-sm">Laen tiimide andmeid...</p>
+        </div>
     {:else if Object.keys(teamStats).length === 0}
-        <p class="text-center text-sm text-gray-400">Andmeid ei leitud selle hooaja kohta.</p>
+        <div class="text-center py-12">
+            <div class="text-5xl mb-4 opacity-50">📭</div>
+            <p class="text-slate-400">Andmeid ei leitud selle hooaja kohta.</p>
+        </div>
     {:else}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {#each Object.entries(teamStats) as [teamName, s]}
-                <div class="bg-[#03538b]/20 border border-[#03538b]/40 rounded-xl p-3 md:p-4 flex flex-col text-center shadow-sm">
-                    <h4 class="text-sm font-semibold text-[#8fd6ff] mb-2">{teamName}</h4>
-                    <div class="grid grid-cols-3 gap-x-3 gap-y-2 text-[11px] md:text-xs text-gray-200">
-                        <div>PTS: {s.PTS}</div>
-                        <div>REB: {s.REB}</div>
-                        <div>AST: {s.AST}</div>
-                        <div>STL: {s.STL}</div>
-                        <div>BLK: {s.BLK}</div>
-                        <div>FG%: {s.FG_PCT}</div>
-                        <div>3PT%: {s.TP_PCT}</div>
-                        <div>FT%: {s.FT_PCT}</div>
-                        <div class="col-span-3 text-[#00b0ff] font-semibold mt-1">DIFF: {(s.PTS - s.OPP_PTS) || 0}</div>
+                <div class="group relative bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/50 rounded-xl p-6 shadow-lg hover:shadow-2xl hover:border-slate-600/70 transition-all duration-300 hover:-translate-y-1">
+                    <!-- Team Header -->
+                    <div class="mb-5 pb-4 border-b border-slate-700/50">
+                        <h4 class="text-lg font-bold text-white tracking-wide">{teamName}</h4>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="space-y-3 mb-4">
+                        <!-- Scoring Stats -->
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="bg-slate-900/50 rounded-lg p-2.5 text-center border border-slate-700/30">
+                                <div class="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5">PTS</div>
+                                <div class="text-sm font-bold text-white">{formatNum(s.PTS)}</div>
+                            </div>
+                            <div class="bg-slate-900/50 rounded-lg p-2.5 text-center border border-slate-700/30">
+                                <div class="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5">REB</div>
+                                <div class="text-sm font-bold text-white">{formatNum(s.REB)}</div>
+                            </div>
+                            <div class="bg-slate-900/50 rounded-lg p-2.5 text-center border border-slate-700/30">
+                                <div class="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5">AST</div>
+                                <div class="text-sm font-bold text-white">{formatNum(s.AST)}</div>
+                            </div>
+                        </div>
+
+                        <!-- Defense Stats -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-slate-900/50 rounded-lg p-2.5 text-center border border-slate-700/30">
+                                <div class="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5">STL</div>
+                                <div class="text-sm font-bold text-white">{formatNum(s.STL)}</div>
+                            </div>
+                            <div class="bg-slate-900/50 rounded-lg p-2.5 text-center border border-slate-700/30">
+                                <div class="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5">BLK</div>
+                                <div class="text-sm font-bold text-white">{formatNum(s.BLK)}</div>
+                            </div>
+                        </div>
+
+                        <!-- Shooting Percentages -->
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="bg-slate-900/50 rounded-lg p-2.5 text-center border border-slate-700/30">
+                                <div class="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5">FG%</div>
+                                <div class="text-sm font-bold text-cyan-400">{formatNum(s.FG_PCT)}</div>
+                            </div>
+                            <div class="bg-slate-900/50 rounded-lg p-2.5 text-center border border-slate-700/30">
+                                <div class="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5">3PT%</div>
+                                <div class="text-sm font-bold text-cyan-400">{formatNum(s.TP_PCT)}</div>
+                            </div>
+                            <div class="bg-slate-900/50 rounded-lg p-2.5 text-center border border-slate-700/30">
+                                <div class="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5">FT%</div>
+                                <div class="text-sm font-bold text-cyan-400">{formatNum(s.FT_PCT)}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Point Differential -->
+                    <div class="mt-4 pt-4 border-t border-slate-700/50">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider">Punktide vahe</span>
+                            <div
+                                    class="px-4 py-2 rounded-lg font-bold text-sm shadow-md"
+                                    class:bg-gradient-to-r={s.PTS - s.OPP_PTS > 0}
+                                    class:from-green-600={s.PTS - s.OPP_PTS > 0}
+                                    class:to-emerald-600={s.PTS - s.OPP_PTS > 0}
+                                    class:text-white={s.PTS - s.OPP_PTS > 0}
+                                    class:from-red-600={s.PTS - s.OPP_PTS <= 0}
+                                    class:to-rose-600={s.PTS - s.OPP_PTS <= 0}
+                            >
+                                {formatDiff(s.PTS - s.OPP_PTS)}
+                            </div>
+                        </div>
                     </div>
                 </div>
             {/each}

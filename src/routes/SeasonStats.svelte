@@ -1,11 +1,11 @@
 <script>
-    import {onMount} from "svelte";
-    import {getAvailableSeasons, getSeasonStats} from "../lib/services/statsService";
-    import SeasonSelector from "../components/SeasonSelector.svelte";
+    import { onMount } from "svelte";
+    import { getAvailableSeasons, getSeasonStats } from "../lib/services/statsService";
     import StatSelector from "../components/StatSelector.svelte";
     import TopPlayers from "../components/TopPlayers.svelte";
     import TeamSection from "../components/TeamSection.svelte";
-    import {getImageUrl} from "../lib/utils/images.js";
+    import TeamSummary from "../components/TeamSummary.svelte";
+    import { getImageUrl } from "../lib/utils/images.js";
 
     let seasons = [];
     let selectedSeason = "";
@@ -18,13 +18,13 @@
 
     onMount(async () => {
         seasons = await getAvailableSeasons();
-        selectedSeason = seasons[(seasons.length - 1)];
+        selectedSeason = seasons.at(-1);
         await loadStats();
     });
 
     async function loadStats() {
         loading = true;
-        const {players, teams} = await getSeasonStats(selectedSeason);
+        const { players, teams } = await getSeasonStats(selectedSeason);
         teamStats = teams;
 
         players.forEach(p => {
@@ -45,27 +45,33 @@
                 ((TP_PCT - 35) * 0.15) +
                 ((FT_PCT - 75) * 0.05);
 
-            const GIS =
-                PTS +
-                1.2 * REB +
-                1.5 * AST +
-                3 * STL +
-                2.5 * BLK -
-                1.3 * TO +
-                efficiencyBoost;
-
-            const minuteFactor = MIN / 28
+            const GIS = PTS + 1.2 * REB + 1.5 * AST + 3 * STL + 2.5 * BLK - 1.3 * TO + efficiencyBoost;
+            const minuteFactor = MIN / 28;
             const playFactor = Math.pow(GAMES / 7, 1.4);
-
             p.mvpIndex = GIS * minuteFactor * playFactor;
         });
 
         const sortedByMVP = [...players].sort((a, b) => b.mvpIndex - a.mvpIndex);
         mvpPlayer = sortedByMVP[0];
         runnerUp = sortedByMVP[1];
-
         topPlayers = [...players].sort((a, b) => b[selectedStat] - a[selectedStat]).slice(0, 5);
         loading = false;
+
+        for (const teamName in teamStats) {
+            const players = teamStats[teamName];
+            teamStats[teamName].averages = calculateTeamAverages(players);
+        }
+    }
+
+    function calculateTeamAverages(players) {
+        const totals = {};
+        const count = players.length;
+        const keys = ["PTS", "REB", "AST", "STL", "BLK", "TO", "MIN"];
+        keys.forEach(key => {
+            const total = players.reduce((sum, p) => sum + (Number(p[key]) || 0), 0);
+            totals[key] = (total / count).toFixed(1);
+        });
+        return totals;
     }
 
     function handleSeasonChange(season) {
@@ -83,57 +89,97 @@
     }
 
     function getImage(player) {
-        const imagePath = getImageUrl(player.NAME);
-        const defaultImage = getImageUrl("default_player");
-        return imagePath || defaultImage;
+        return getImageUrl(player.NAME) || getImageUrl("default_player");
     }
 </script>
 
-<main class="min-h-screen bg-[#000536] text-white px-8 py-10 md:px-10 md:py-12 flex flex-col items-center">
-    <h1 class="text-3xl md:text-4xl font-bold text-[#03538b] mb-8 text-center flex items-center gap-2">
-        🏀 Hooaja koondstatistika
-    </h1>
+<main class="min-h-screen bg-gradient-to-b from-[#000a26] to-[#001a45] text-white flex flex-col items-center px-4 md:px-6 py-8 md:py-12">
+    <!-- Header -->
+    <header class="w-full max-w-7xl text-center mb-8 md:mb-10">
+        <h1 class="text-3xl md:text-5xl font-extrabold text-[#00b0ff] drop-shadow-lg mb-3 md:mb-4">
+            2K League Stats
+        </h1>
+        <p class="text-gray-300 text-sm md:text-base">Ülevaade hooaja tipphetkedest ja tiimide statistikast</p>
+    </header>
 
-    <div class="flex flex-col md:flex-row items-center justify-center gap-6 w-full max-w-5xl mb-12">
-        <div class="flex flex-col items-center w-full md:w-1/3">
-            <SeasonSelector {seasons} {selectedSeason} onChange={handleSeasonChange}/>
+    <!-- 1. Season Selector - Full Width -->
+    <div class="w-full flex justify-center mt-6 mb-6">
+        <div class="flex items-center gap-3">
+            {#each seasons as season, i}
+                <button
+                        class={`w-12 h-12 flex items-center justify-center rounded-full
+                    text-base font-semibold transition-all duration-200 backdrop-blur-md
+                    ${season === selectedSeason
+                        ? 'bg-blue-600/90 text-white ring-4 ring-blue-400/40 shadow-xl shadow-blue-500/40 scale-110'
+                        : 'bg-white/10 text-gray-300 hover:bg-white/20 hover:scale-105 hover:shadow-md'
+                    }`}
+                        on:click={() => handleSeasonChange(season)}
+                >
+                    {i + 1}
+                </button>
+            {/each}
         </div>
-
-        <div class="flex flex-col items-center w-full md:w-1/3">
-            <StatSelector {selectedStat} onChange={handleStatChange}/>
-        </div>
-
-        {#if mvpPlayer}
-            <div class="flex flex-col items-center bg-[#03538b]/20 border border-[#03538b]/40 rounded-2xl p-4 w-full md:w-1/3 text-center shadow-lg">
-                <h2 class="text-xl font-semibold text-[#00b0ff] mb-2">🏆 {mvpPlayer.name}</h2>
-                <img src={getImage(mvpPlayer)} alt={mvpPlayer.name}
-                     class="w-20 h-20 object-cover rounded-full mb-2 border-2 border-[#03538b]"/>
-                <p class="text-sm text-[#00b0ff] font-semibold">MVP skoor: {round(mvpPlayer.mvpIndex)}</p>
-
-                {#if runnerUp}
-                    <div class="mt-4 bg-[#03538b]/10 border border-[#03538b]/30 rounded-xl p-3 w-full">
-                        <h3 class="text-sm font-semibold text-[#8fd6ff] mb-1">🥈 Runner-up: {runnerUp.name}</h3>
-                        <div class="flex items-center justify-center gap-2">
-                            <img src={getImage(runnerUp)} alt={runnerUp.name}
-                                 class="w-10 h-10 object-cover rounded-full border border-[#03538b]"/>
-                            <div class="text-xs opacity-80 text-left">
-                                <div>MVP skoor: {round(runnerUp.mvpIndex)}</div>
-                            </div>
-                        </div>
-                    </div>
-                {/if}
-            </div>
-        {/if}
-
     </div>
 
     {#if loading}
-        <p class="text-center">⏳ Laen andmeid...</p>
+        <div class="flex flex-col items-center justify-center py-20">
+            <div class="animate-spin rounded-full h-16 w-16 border-4 border-slate-600 border-t-blue-500 mb-4"></div>
+            <p class="text-gray-400 text-sm">Laen andmeid...</p>
+        </div>
     {:else}
-        <TopPlayers players={topPlayers} {selectedStat}/>
+        <!-- 2. MVP/Runner-Up + Team Summary - Side by Side -->
+        <section class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- MVP & Runner-Up -->
+            <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 shadow-xl">
+                <h3 class="text-xl font-bold text-gray-200 mb-6 text-center">🏆 Hooaja Parimad</h3>
 
-        {#each Object.entries(teamStats) as [teamName, players]}
-            <TeamSection {teamName} {players} {selectedStat}/>
-        {/each}
+                <div class="space-y-4">
+                    {#if mvpPlayer}
+                        <div class="bg-gradient-to-br from-[#03538b]/60 to-[#001f4d]/80 rounded-xl border border-[#00b0ff]/30 p-6 flex flex-col items-center text-center shadow-lg hover:scale-[1.02] transition">
+                            <div class="text-[#00b0ff] text-sm font-bold mb-3">🏆 MVP</div>
+                            <img src={getImage(mvpPlayer)} alt={mvpPlayer.name}
+                                 class="w-24 h-24 rounded-full border-4 border-[#00b0ff] shadow-md mb-3"/>
+                            <div class="text-xl font-bold">{mvpPlayer.name}</div>
+                            <div class="text-sm text-gray-300 mt-1">MVP indeks: {round(mvpPlayer.mvpIndex)}</div>
+                        </div>
+                    {/if}
+
+                    {#if runnerUp}
+                        <div class="bg-gradient-to-br from-[#022c58]/60 to-[#001233]/80 rounded-xl border border-[#03538b]/40 p-5 flex flex-col items-center text-center shadow-md hover:scale-[1.02] transition">
+                            <div class="text-[#8fd6ff] text-sm font-bold mb-2">🥈 Runner-Up</div>
+                            <img src={getImage(runnerUp)} alt={runnerUp.name}
+                                 class="w-20 h-20 rounded-full border-2 border-[#03538b] mb-2"/>
+                            <div class="text-lg font-semibold">{runnerUp.name}</div>
+                            <div class="text-xs text-gray-400 mt-1">MVP indeks: {round(runnerUp.mvpIndex)}</div>
+                        </div>
+                    {/if}
+                </div>
+            </div>
+
+            <!-- Team Summary -->
+            <div>
+                <TeamSummary seasonName={selectedSeason}/>
+            </div>
+        </section>
+
+        <!-- 3. Stat Selector - Full Width -->
+        <section class="w-full max-w-7xl bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 md:p-6 shadow-xl mb-8">
+            <div class="flex flex-col items-center">
+                <h3 class="text-sm text-gray-300 mb-3">Vali statistika TOP 5 mängijate jaoks</h3>
+                <StatSelector {selectedStat} onChange={handleStatChange}/>
+            </div>
+        </section>
+
+        <!-- 4. Top Players -->
+        <div class="w-full max-w-7xl mb-8">
+            <TopPlayers players={topPlayers} {selectedStat}/>
+        </div>
+
+        <!-- 5. Team Sections -->
+        <div class="w-full max-w-7xl space-y-8">
+            {#each Object.entries(teamStats) as [teamName, players]}
+                <TeamSection {teamName} {players} {selectedStat}/>
+            {/each}
+        </div>
     {/if}
 </main>

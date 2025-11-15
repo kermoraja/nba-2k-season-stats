@@ -153,6 +153,92 @@ export async function getSeasonStats(
     }
 }
 
+
+export async function getTeamSeasonStats(seasonName: string) {
+    const snapshot = await getDocs(collection(db, "games"));
+
+    const teamTotals: Record<string, any> = {};
+
+    snapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.SEASON !== seasonName) return;
+
+        const addTeam = (teamName: string, playerStats: any[], oppScore: number) => {
+            if (!teamTotals[teamName]) {
+                teamTotals[teamName] = {
+                    games: 0,
+                    pts: 0,
+                    reb: 0,
+                    ast: 0,
+                    stl: 0,
+                    blk: 0,
+                    fgMade: 0,
+                    fgAtt: 0,
+                    tpMade: 0,
+                    tpAtt: 0,
+                    ftMade: 0,
+                    ftAtt: 0,
+                    oppPts: 0
+                };
+            }
+
+            const t = teamTotals[teamName];
+            t.games++;
+
+            playerStats.forEach((p) => {
+                const [fgMade, fgAtt] = (p.FG || "0-0").split("-").map(Number);
+                const [tpMade, tpAtt] = (p["3PT"] || "0-0").split("-").map(Number);
+                const [ftMade, ftAtt] = (p.FT || "0-0").split("-").map(Number);
+
+                t.pts += Number(p.PTS || 0);
+                t.reb += Number(p.REB || 0);
+                t.ast += Number(p.AST || 0);
+                t.stl += Number(p.STL || 0);
+                t.blk += Number(p.BLK || 0);
+                t.fgMade += fgMade || 0;
+                t.fgAtt += fgAtt || 0;
+                t.tpMade += tpMade || 0;
+                t.tpAtt += tpAtt || 0;
+                t.ftMade += ftMade || 0;
+                t.ftAtt += ftAtt || 0;
+            });
+
+            t.oppPts += oppScore;
+        };
+
+        const away = data.AWAY_TEAM;
+        const home = data.HOME_TEAM;
+        const awayPlayers = data.AWAY_TEAM_PLAYER_STATS || [];
+        const homePlayers = data.HOME_TEAM_PLAYER_STATS || [];
+
+        const awayPts = Number(data.GAME_SUMMARY?.AWAY_TEAM_TOTAL || 0);
+        const homePts = Number(data.GAME_SUMMARY?.HOME_TEAM_TOTAL || 0);
+
+        addTeam(away, awayPlayers, homePts);
+        addTeam(home, homePlayers, awayPts);
+    });
+
+    const result: Record<string, any> = {};
+    for (const team in teamTotals) {
+        const t = teamTotals[team];
+        const g = Math.max(1, t.games);
+        result[team] = {
+            GAMES: g,
+            PTS: (t.pts / g).toFixed(1),
+            OPP_PTS: (t.oppPts / g).toFixed(1),
+            REB: (t.reb / g).toFixed(1),
+            AST: (t.ast / g).toFixed(1),
+            STL: (t.stl / g).toFixed(1),
+            BLK: (t.blk / g).toFixed(1),
+            FG_PCT: t.fgAtt > 0 ? ((t.fgMade / t.fgAtt) * 100).toFixed(1) : "0.0",
+            TP_PCT: t.tpAtt > 0 ? ((t.tpMade / t.tpAtt) * 100).toFixed(1) : "0.0",
+            FT_PCT: t.ftAtt > 0 ? ((t.ftMade / t.ftAtt) * 100).toFixed(1) : "0.0"
+        };
+    }
+
+    return result;
+}
+
 export async function getAllSeasons(): Promise<string[]> {
     const snapshot = await getDocs(collection(db, "games"))
     const seasons = new Set<string>()
