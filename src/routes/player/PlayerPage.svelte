@@ -28,19 +28,23 @@
     let seasonAverages: Record<string, Record<string, number>> = {};
     let seasonGameCounts: Record<string, number> = {};
 
-    // 🔥 UUS
     let teammates: any[] = [];
     let playerTeam: string = "";
+
+    let lastLoadedPlayer = null;
 
     $: rawParam = $params?.name ?? "";
     $: playerName = rawParam.replace(/-/g, " ").replace(/~/g, ".");
 
-    $: if ($params?.name) {
+    $: if ($params?.name && $params.name !== lastLoadedPlayer) {
+        lastLoadedPlayer = $params.name;
         reloadPlayerData();
     }
 
     function openEditModal(game: any) {
-        if (!$user) return;
+        if (!$user) {
+            return;
+        }
         selectedGame = game;
         editStats = {
             PTS: game.PTS,
@@ -59,7 +63,9 @@
     }
 
     async function saveStats() {
-        if (!selectedGame?.ref) return alert("Mängu dokumenti ei leitud.");
+        if (!selectedGame?.ref) {
+            return alert("Mängu dokumenti ei leitud.");
+        }
         try {
             const path = selectedGame.IS_HOME
                 ? "HOME_TEAM_PLAYER_STATS"
@@ -67,11 +73,15 @@
 
             const snapshot = await getDoc(selectedGame.ref);
             const data = snapshot.data();
-            if (!data) return;
+            if (!data) {
+                return;
+            }
 
             const arr = data[path];
             const playerIndex = arr.findIndex((p: any) => p.NAME === playerName);
-            if (playerIndex === -1) return alert("Mängijat ei leitud.");
+            if (playerIndex === -1) {
+                return alert("Mängijat ei leitud.");
+            }
 
             Object.entries(editStats).forEach(([k, v]) => (arr[playerIndex][k] = v));
             await updateDoc(selectedGame.ref, { [path]: arr });
@@ -86,7 +96,9 @@
 
     async function saveOverall() {
         try {
-            if (!newOverall || isNaN(newOverall)) return alert("Vale number.");
+            if (!newOverall || isNaN(newOverall)) {
+                return alert("Vale number.");
+            }
 
             const playerId = rawParam.toLowerCase().replace(/~/g, ".");
             const playerRef = doc(db, "players", playerId);
@@ -100,8 +112,6 @@
             alert("Viga.");
         }
     }
-
-    onMount(reloadPlayerData);
 
     async function reloadPlayerData() {
         loading = true;
@@ -126,7 +136,9 @@
             const inHome = homeArr.some((p) => p.NAME === playerName);
             const inAway = awayArr.some((p) => p.NAME === playerName);
 
-            if (!inHome && !inAway) return;
+            if (!inHome && !inAway) {
+                return;
+            }
 
             const stat = (inHome ? homeArr : awayArr).find((p) => p.NAME === playerName);
             const isHome = inHome;
@@ -166,7 +178,9 @@
         selectedSeason = playedSeasons[playedSeasons.length - 1];
         games = playerGames.filter(g => g.SEASON === selectedSeason);
 
-        if (games.length > 0) calculateAverages();
+        if (games.length > 0) {
+            calculateAverages();
+        }
         calculateSeasonAverages();
 
         playerImageUrl = getImageUrl(playerName);
@@ -191,8 +205,6 @@
             playerOverall = snap.data().overall ?? null;
             newOverall = playerOverall;
         }
-
-        console.log(teammates)
 
         loading = false;
     }
